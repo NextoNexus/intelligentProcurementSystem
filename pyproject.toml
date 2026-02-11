@@ -1,0 +1,66 @@
+[project]
+name = "intelligentprocurementsystem"
+version = "0.1.0"
+description = "企业智能物资采购管理系统"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "sqlalchemy>=2.0.0",
+    "alembic>=1.12.0",
+    "asyncpg>=0.29.0",
+    "aiosqlite>=0.20.0",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    "pydantic-ai>=0.0.10",
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+    "python-multipart>=0.0.6",
+    "python-dotenv>=1.0.0",
+    "httpx>=0.25.0",
+    "email-validator>=2.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.7.0",
+    "pre-commit>=3.5.0",
+]
+
+# [tool.uv]
+# dev-dependencies = ["dev"]  # 已弃用，使用project.optional-dependencies
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.hatch.build]
+include = [
+    "app/**/*.py",
+    "app/migrations/**/*.py",
+    "alembic.ini",
+    ".env.example",
+    "README.md",
+]
+
+exclude = [
+    "**/__pycache__/*",
+    "**/*.pyc",
+    "**/*.pyo",
+    "**/*.pyd",
+    ".venv",
+    "venv",
+    "env",
+    ".git",
+    ".vscode",
+    "*.log",
+    "*.tmp",
+]
