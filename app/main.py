@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import logging
+import uvicorn
 
 from .core.config import settings
 from .core.database import init_db, close_db
@@ -100,9 +101,8 @@ async def get_version():
         "debug": settings.debug,
     }
 
-
-if __name__ == "__main__":
-    import uvicorn
+def main():
+    """主函数"""
     uvicorn.run(
         "app.main:app",
         host="0.0.0.0",
@@ -110,3 +110,7 @@ if __name__ == "__main__":
         reload=settings.debug,
         log_level=settings.log_level.lower(),
     )
+
+
+if __name__ == "__main__":
+    main()
