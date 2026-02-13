@@ -126,7 +126,7 @@ export const usersAPI = {
 
 export const suppliersAPI = {
   // 获取供应商列表
-  getSuppliers: (params) => api.get('/suppliers', { params }),
+  getSuppliers: (params) => api.get('/suppliers/', { params }),
 
   // 获取供应商详情
   getSupplier: (id) => api.get(`/suppliers/${id}`),
@@ -160,7 +160,7 @@ export const suppliersAPI = {
 
 export const procurementAPI = {
   // 获取采购需求列表
-  getProcurementRequests: (params) => api.get('/procurement/requests', { params }),
+  getProcurementRequests: (params) => api.get('/procurement/requests/', { params }),
 
   // 创建采购需求
   createProcurementRequest: (data) => api.post('/procurement/requests', data),
@@ -174,7 +174,7 @@ export const procurementAPI = {
 
 export const inventoryAPI = {
   // 获取库存列表
-  getInventory: (params) => api.get('/inventory', { params }),
+  getInventory: (params) => api.get('/inventory/', { params }),
 
   // 获取库存项详情
   getInventoryItem: (id) => api.get(`/inventory/${id}`),
