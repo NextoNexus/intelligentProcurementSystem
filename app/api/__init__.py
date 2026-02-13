@@ -3,6 +3,7 @@ API路由模块
 导出所有API路由
 """
 from .auth import router as auth
+from .users import router as users
 from .suppliers import router as suppliers
 from .procurement import router as procurement
 from .inventory import router as inventory
@@ -13,6 +14,7 @@ from .reports import router as reports
 
 __all__ = [
     "auth",
+    "users",
     "suppliers",
     "procurement",
     "inventory",

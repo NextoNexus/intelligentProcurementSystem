@@ -1,0 +1,121 @@
+# Bug修复日志
+智能采购系统 - 前端用户管理页面访问问题
+
+## Bug记录 #1
+**修复时间**: 2026-02-13 12:57:00
+**报告人**: 系统测试（Playwright自动化测试）
+**影响模块**: 前端用户管理模块
+**优先级**: 高
+**状态**: ✅ 已修复
+
+### Bug描述
+管理员用户登录系统后，点击左侧导航栏的"用户管理"链接，页面自动跳转回登录页面，导致无法访问用户管理功能。
+
+**具体表现**：
+1. 使用管理员账号（admin/Admin123!）成功登录系统
+2. 仪表盘页面正常显示，左侧导航栏可见
+3. 点击"👥 用户管理"链接后，页面立即重定向到 `/login`
+4. 浏览器控制台显示HTTP 401错误：`Failed to load resource: the server responded with a status of 401 (Unauthorized)`
+5. 前端显示错误信息："获取用户列表失败: AxiosError: Request failed with status code 401"
+
+### 根本原因分析
+通过Playwright自动化测试和网络请求分析，发现问题的根本原因是：
+
+1. **FastAPI尾部斜杠重定向机制**：
+   - 前端调用 `GET /api/users`（无尾部斜杠）
+   - 后端FastAPI路由定义为 `@router.get("/", ...)`，实际期望路径为 `/api/users/`
+   - FastAPI自动返回 `307 Temporary Redirect` 重定向到 `/api/users/`
+
+2. **HTTP重定向导致认证头丢失**：
+   - 浏览器在跟随307重定向时，可能不会自动保留 `Authorization: Bearer <token>` 请求头
+   - 后端收到无认证头的请求，返回 `401 Unauthorized`
+
+3. **前端自动登出机制**：
+   - 前端axios响应拦截器检测到401状态码
+   - 自动清除localStorage中的token和用户信息
+   - 触发路由守卫重定向到登录页面
+
+4. **API设计不一致**：
+   - 前端API服务层调用格式不统一，部分端点有尾部斜杠，部分没有
+   - 后端FastAPI默认启用 `redirect_slashes=True` 导致自动重定向
+
+### 修复方案
+**文件**: `frontend/src/services/api.js` (第87行)
+
+**修改内容**：
+```javascript
+// 修复前：
+getUsers: (params) => api.get('/users', { params }),
+
+// 修复后：
+getUsers: (params) => api.get('/users/', { params }),
+```
+
+**修复原理**：
+- 统一前端API调用格式，为所有集合端点（collection endpoints）添加尾部斜杠
+- 避免触发FastAPI的自动重定向机制
+- 确保认证头在请求过程中完整传递
+
+### 验证结果
+修复后通过Playwright自动化测试验证：
+
+1. ✅ **登录功能正常**：管理员账号可成功登录
+2. ✅ **页面跳转正常**：点击"用户管理"链接正确跳转到 `/users` 页面
+3. ✅ **API调用成功**：
+   - `GET /api/users/` 返回 `200 OK`
+   - `GET /api/users/roles/simple/` 返回 `200 OK`
+4. ✅ **页面渲染正常**：
+   - 用户统计卡片正常显示
+   - 用户表格正常加载和显示
+   - 角色管理部分正常显示
+5. ✅ **无控制台错误**：浏览器控制台无401或其他错误
+6. ✅ **网络请求正常**：所有API请求携带正确的Authorization头
+
+### 影响范围
+1. **直接影响**：
+   - 用户管理页面访问功能
+   - 管理员角色权限验证
+
+2. **间接影响**：
+   - 其他管理模块可能存在相同问题
+   - API调用的统一性和一致性
+
+### 后续建议
+1. **全面检查API端点**：
+   - 检查并修复 `suppliersAPI`、`procurementAPI`、`inventoryAPI` 等模块中的类似问题
+   - 统一所有集合端点为尾部斜杠格式
+
+2. **后端配置优化**：
+   ```python
+   # 考虑在FastAPI中禁用自动重定向
+   app = FastAPI(redirect_slashes=False)
+   ```
+
+3. **前端拦截器增强**：
+   - 考虑在axios拦截器中添加重定向处理逻辑
+   - 确保307重定向时保留认证头
+
+4. **API设计规范**：
+   - 制定统一的API设计规范文档
+   - 明确集合端点使用尾部斜杠，资源端点不使用
+
+5. **自动化测试覆盖**：
+   - 添加Playwright端到端测试覆盖所有管理页面
+   - 监控网络请求中的重定向行为
+
+### 相关文件
+- `frontend/src/services/api.js` - 前端API服务层
+- `app/api/users.py` - 后端用户管理API路由
+- `frontend/src/views/UsersView.vue` - 用户管理前端页面
+- `frontend/src/router/index.js` - 前端路由配置
+
+### 测试环境
+- **前端**: Vue 3 + Vite开发服务器 (http://localhost:5173)
+- **后端**: FastAPI + Python 3.11 (http://localhost:8000)
+- **数据库**: PostgreSQL 18
+- **测试工具**: Playwright CLI + headed Chrome浏览器
+
+---
+**记录人**: Claude Code (Anthropic AI)
+**审核状态**: ✅ 已通过验证
+**关联提交**: 前端API服务层修复

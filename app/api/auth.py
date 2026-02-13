@@ -307,33 +307,33 @@ async def get_current_user_info(
         permissions=user.permissions
     )
 
-@router.get("/users", response_model=List[UserResponse], dependencies=[Depends(require_role("admin"))])
-async def get_users(
-    skip: int = 0,
-    limit: int = 100,
-    db: AsyncSession = Depends(get_db)
-):
-    """
-    获取用户列表（仅管理员）
-    """
-    result = await db.execute(
-        select(User).offset(skip).limit(limit).options(selectinload(User.roles))
-    )
-    users = result.scalars().all()
-
-    return [
-        UserResponse(
-            id=str(user.id),
-            username=user.username,
-            email=user.email,
-            full_name=user.full_name,
-            phone=user.phone,
-            employee_id=user.employee_id,
-            department=user.department,
-            position=user.position,
-            roles=[role.name for role in user.roles],
-            permissions=user.permissions
-        )
-        for user in users
-    ]
+# @router.get("/users", response_model=List[UserResponse], dependencies=[Depends(require_role("admin"))])
+# async def get_users(
+#     skip: int = 0,
+#     limit: int = 100,
+#     db: AsyncSession = Depends(get_db)
+# ):
+#     """
+#     获取用户列表（仅管理员）
+#     """
+#     result = await db.execute(
+#         select(User).offset(skip).limit(limit).options(selectinload(User.roles))
+#     )
+#     users = result.scalars().all()
+#
+#     return [
+#         UserResponse(
+#             id=str(user.id),
+#             username=user.username,
+#             email=user.email,
+#             full_name=user.full_name,
+#             phone=user.phone,
+#             employee_id=user.employee_id,
+#             department=user.department,
+#             position=user.position,
+#             roles=[role.name for role in user.roles],
+#             permissions=user.permissions
+#         )
+#         for user in users
+#     ]
 

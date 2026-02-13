@@ -9,7 +9,7 @@ import uvicorn
 
 from .core.config import settings
 from .core.database import init_db, close_db
-from .api import auth, suppliers, procurement, inventory, ai
+from .api import auth, users, suppliers, procurement, inventory, ai
 
 # 配置日志
 logging.basicConfig(
@@ -42,6 +42,7 @@ app.add_middleware(
 
 # 注册API路由
 app.include_router(auth, prefix="/api/auth", tags=["认证"])
+app.include_router(users, prefix="/api/users", tags=["用户管理"])
 app.include_router(suppliers, prefix="/api/suppliers", tags=["供应商管理"])
 app.include_router(procurement, prefix="/api/procurement", tags=["采购管理"])
 app.include_router(inventory, prefix="/api/inventory", tags=["库存管理"])
@@ -57,13 +58,14 @@ async def startup_event():
     logger.info(f"启动{settings.app_name} v{settings.app_version}")
     logger.info(f"调试模式: {settings.debug}")
 
-    # 初始化数据库
-    try:
-        await init_db()
-        logger.info("数据库初始化完成")
-    except Exception as e:
-        logger.error(f"数据库初始化失败: {e}")
-        raise
+    # 初始化数据库 - 已禁用，使用Alembic迁移
+    # try:
+    #     await init_db()
+    #     logger.info("数据库初始化完成")
+    # except Exception as e:
+    #     logger.error(f"数据库初始化失败: {e}")
+    #     raise
+    logger.info("数据库初始化已禁用，使用Alembic迁移")
 
 
 @app.on_event("shutdown")

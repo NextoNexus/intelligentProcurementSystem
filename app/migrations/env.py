@@ -27,7 +27,12 @@ sqlalchemy_url = config.get_main_option("sqlalchemy.url")
 if not sqlalchemy_url or sqlalchemy_url.startswith("postgresql://user:password"):
     # 使用应用配置中的数据库URL
     sqlalchemy_url = str(settings.database_url)
-    config.set_main_option("sqlalchemy.url", sqlalchemy_url)
+
+# 将标准postgresql://转换为postgresql+asyncpg://用于异步操作
+if sqlalchemy_url.startswith("postgresql://") and not sqlalchemy_url.startswith("postgresql+asyncpg://"):
+    sqlalchemy_url = sqlalchemy_url.replace("postgresql://", "postgresql+asyncpg://")
+
+config.set_main_option("sqlalchemy.url", sqlalchemy_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

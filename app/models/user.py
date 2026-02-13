@@ -61,6 +61,9 @@ class Role(Base):
     def __repr__(self) -> str:
         return f'<Role {self.name}>'
 
+    def __str__(self) -> str:
+        return self.name
+
 
 class Permission(Base):
     """权限模型"""
@@ -242,3 +245,13 @@ class User(Base):
     def has_permission(self, permission_code: str) -> bool:
         """检查用户是否具有指定权限"""
         return permission_code in self.permissions
+
+    @property
+    def role_ids(self) -> list:
+        """获取用户角色ID列表"""
+        return [role.id for role in self.roles]
+
+    @property
+    def role_names(self) -> list:
+        """获取用户角色名称列表"""
+        return [role.name for role in self.roles]

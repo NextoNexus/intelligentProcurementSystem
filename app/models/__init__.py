@@ -3,7 +3,7 @@
 """
 from .base import Base
 from .user import User, Role, Permission
-from .supplier import Supplier
+from .supplier import Supplier, SupplierProduct, SupplierEvaluation
 from .procurement import (
     ProcurementRequest,
     PurchaseOrder,
@@ -18,6 +18,8 @@ __all__ = [
     "Role",
     "Permission",
     "Supplier",
+    "SupplierProduct",
+    "SupplierEvaluation",
     "ProcurementRequest",
     "PurchaseOrder",
     "OrderItem",

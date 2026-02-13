@@ -9,7 +9,7 @@ Intelligent Procurement System is an OA-style web application for managing enter
 Key requirements:
 - Left-menu, center-main, right-chat three-column layout
 - Backend: Python 3.11+ with FastAPI
-- Frontend: Vue 3 with Tailwind CSS 4 (not yet implemented)
+- Frontend: Vue 3 with Tailwind CSS 4 (partially implemented)
 - Database: PostgreSQL 18
 - AI integration: pydantic_ai with optional MCP server extensions
 - Support for text-only AI chat with database query capabilities (read-only)
@@ -36,12 +36,13 @@ Based on requirements document (`企业智能物资采购系统需求汇总.txt`
 | **Configuration Management** | ✅ Implemented | pydantic-settings with environment variable loading |
 | **Database Engine** | ✅ Configured | Async SQLAlchemy 2.0 with asyncpg driver for PostgreSQL |
 | **Docker Configuration** | ✅ Configured | docker-compose for PostgreSQL, pgAdmin, and backend services |
-| **API Routes** | ⚠️ Partial | Auth module complete; other modules (suppliers, procurement, inventory, ai) have router structure but no endpoints |
+| **API Routes** | ✅ Complete | Auth, User Management, and Supplier Management modules fully implemented; Procurement, Inventory, AI modules have placeholder endpoints (mounted); Finance, Analytics, Reports modules have placeholder routers (not yet mounted) |
 | **Business Logic Services** | ❌ Not started | `app/services/` directory exists but empty |
-| **Validation Schemas** | ❌ Not started | `app/schemas/` directory exists but empty |
+| **Validation Schemas** | ✅ Implemented | User, Role, Permission, Supplier, SupplierProduct, SupplierEvaluation schemas implemented in `app/schemas/` |
 | **AI Integration** | ⚠️ Structure only | `app/ai/` directory exists; pydantic_ai agents not implemented |
-| **Database Migrations** | ⚠️ Configured | Alembic configured but no migration scripts created yet |
-| **Frontend Structure** | ⚠️ Skeleton only | `frontend/` directory with component structure but no Vue code |
+| **Database Migrations** | ✅ Implemented | Alembic configured with initial migration scripts (`a3206323f0db_initial_tables.py`) |
+| **Frontend Structure** | ✅ Partially Implemented | Vue 3 UI components, routing, Pinia stores, API service layer; three-column layout with AI chat sidebar (hidden by default) |
+| **Frontend Backend Integration** | ⚠️ Partial | User Management and Supplier Management frontend views connected to backend APIs; other modules pending |
 | **Testing** | ❌ Not started | `tests/` directory exists but empty |
 
 **Key Working Components:**
@@ -50,17 +51,26 @@ Based on requirements document (`企业智能物资采购系统需求汇总.txt`
 - Role-based permission models (admin, department head, management, employee)
 - Async database session management
 - CORS middleware configured for development
+- Database migration scripts (`a3206323f0db_initial_tables.py`) created and ready
+- Frontend three-column layout with Vue 3 components, routing, and Pinia state management
+- Frontend API service layer with axios interceptors and auth store
+- Vite development server with proxy to backend API
+- User Management API with full CRUD operations, role and permission management
+- Supplier Management API with CRUD operations, product management, and evaluation system
+- Pydantic validation schemas for User, Role, Permission, Supplier models
+- Frontend User Management view with search, filtering, and real-time data
+- Frontend Supplier Management view with search, filtering, and rating display
 
 **Pending Implementation:**
-- Supplier management API endpoints
-- Procurement workflow API endpoints
-- Inventory control API endpoints
-- AI chat integration with pydantic_ai
-- Frontend Vue 3 application
-- Database migration scripts
-- Business logic services layer
-- Pydantic validation schemas
-- Test suite
+- Procurement workflow API endpoints (backend)
+- Inventory control API endpoints (backend)
+- Financial accounting API endpoints (backend)
+- Analytics and reporting API endpoints (backend)
+- AI chat integration with pydantic_ai (backend)
+- Business logic services layer (backend)
+- Frontend-backend integration for remaining modules (Procurement, Inventory, Finance, Analytics, AI)
+- Test suite (backend and frontend)
+- User and Supplier management UI enhancements (create, edit, delete dialogs)
 
 ## Development Environment
 
@@ -71,9 +81,12 @@ Based on requirements document (`企业智能物资采购系统需求汇总.txt`
 - Development dependencies: pytest, black, ruff, mypy, pre-commit
 
 ### Frontend
-- Expected to be in `frontend/` directory (basic structure exists)
-- Node.js 22.16+ required (not yet set up)
-- Vue 3 with Tailwind CSS 4
+- Located in `frontend/` directory with full Vue 3 project structure
+- Node.js 22.16+ required (already installed with dependencies)
+- Vue 3 with Composition API, Vue Router 4, Pinia for state management
+- Tailwind CSS 4 for styling, with Vite as build tool
+- API service layer with axios interceptors and proxy configuration to backend
+- Three-column layout with AI chat sidebar implemented
 
 ### Database
 - PostgreSQL 18 required locally or via Docker
@@ -92,6 +105,7 @@ uv run uvicorn app.main:app --reload
 
 # Run tests (when implemented)
 uv run pytest
+# Run single test: uv run pytest path/to/test_file.py::test_function
 
 # Format code with black
 uv run black .
@@ -103,26 +117,31 @@ uv run ruff check --fix
 uv run mypy .
 ```
 
-### Frontend Development (anticipated)
+### Frontend Development
 ```bash
 cd frontend
 
-# Install dependencies (when package.json exists)
+# Install dependencies (package.json exists)
 npm install
 
-# Run development server
+# Run development server (Vite with proxy to backend on port 5173)
 npm run dev
 
 # Build for production
 npm run build
 
-# Run tests
-npm test
+# Lint code
+npm run lint
+
+# Preview production build
+npm run preview
 ```
+
+Note: The frontend development server runs on http://localhost:5173 with proxy to backend API at http://localhost:8000 (configured in vite.config.js).
 
 ### Database Operations
 ```bash
-# Run migrations (when migration scripts exist)
+# Run migrations (initial migration scripts exist)
 uv run alembic upgrade head
 
 # Create new migration
@@ -159,6 +178,9 @@ uv run python test_imports.py
 # Test registration endpoint
 uv run python test_reg_fix.py
 
+# Create admin user (requires database migrations applied)
+uv run python create_admin.py
+
 # Clear Python cache (fix import issues)
 find . -name "__pycache__" -type d -exec rm -rf {} +
 find . -name "*.pyc" -delete
@@ -179,20 +201,21 @@ uv run pytest --cov=app --cov-report=html
 The system follows a modular monolith architecture with clear separation:
 
 1. **Backend** (`app/`):
-   - `api/`: FastAPI routers organized by module (auth, suppliers, procurement, inventory, ai)
+   - `api/`: FastAPI routers organized by module (auth, users, suppliers, procurement, inventory, ai, finance, analytics, reports)
    - `core/`: Configuration, security, database engine, dependencies
    - `models/`: SQLAlchemy ORM models (user, role, permission, supplier, supplier_product, etc.)
-   - `schemas/`: Pydantic models for request/validation (currently empty)
+   - `schemas/`: Pydantic models for request/validation (user, role, permission, supplier models implemented)
    - `services/`: Business logic layer (currently empty)
    - `ai/`: pydantic_ai agent definitions and MCP server integrations (structure exists)
-   - `migrations/`: Alembic migration scripts (env.py only)
+   - `migrations/`: Alembic migration scripts (initial tables migration exists)
 
 2. **Frontend** (`frontend/`):
-   - Three-column layout component structure (to be implemented)
-   - Views corresponding to backend modules
-   - AI chat component in right sidebar
-   - Vue Router for navigation
-   - Pinia or Vuex for state management
+   - Three-column layout with left navigation, main content, right AI chat sidebar (implemented in `MainLayout.vue`)
+   - Views for each module (`DashboardView.vue`, `SuppliersView.vue`, etc.) with placeholder UI
+   - Vue Router 4 with route guards and meta titles
+   - Pinia stores for state management (auth store with persistence)
+   - API service layer (`services/api.js`) with axios interceptors and proxy configuration
+   - Vite build tool with Tailwind CSS 4 and PostCSS
 
 3. **Database**:
    - PostgreSQL with tables for users, roles, permissions, suppliers, products, etc.
@@ -202,9 +225,9 @@ The system follows a modular monolith architecture with clear separation:
 - **Configuration**: Uses pydantic-settings with environment variable loading (`app/core/config.py`)
 - **Authentication**: Full JWT-based auth system (OAuth2 compatible) with registration, login, token refresh, and role-based permissions
 - **Database Models**: SQLAlchemy ORM models for users, roles, permissions, suppliers, and supplier products
-- **API Structure**: FastAPI routers organized by business domain (auth, suppliers, procurement, inventory, ai)
+- **API Structure**: FastAPI routers organized by business domain (auth, users, suppliers, procurement, inventory, ai, finance, analytics, reports)
 - **Async Database**: SQLAlchemy 2.0 async engine with asyncpg driver for PostgreSQL
-- **Migration Ready**: Alembic configured but no initial migration scripts yet
+- **Migration Ready**: Alembic configured with initial migration scripts created
 
 ### Key Design Patterns
 - **Left-Menu-Right-Chat Layout**: Persistent left navigation, main content area, right-side AI chat panel
@@ -230,11 +253,12 @@ The system follows a modular monolith architecture with clear separation:
 
 2. **Database**:
    - Ensure PostgreSQL is running (port 5432)
-   - Create migration script: `uv run alembic revision --autogenerate -m "initial"`
-   - Apply migrations: `uv run alembic upgrade head`
+   - Apply existing migrations: `uv run alembic upgrade head`
+   - (If model changes) Create new migration: `uv run alembic revision --autogenerate -m "description"`
 
 3. **Running**:
    - Start backend: `uv run uvicorn app.main:app --reload`
+   - Start frontend: `cd frontend && npm run dev` (access at `http://localhost:5173`)
    - Access backend API at `http://localhost:8000`
    - API documentation available at `http://localhost:8000/docs` (when debug=True)
    - For Docker: `docker-compose up --build`
@@ -263,10 +287,13 @@ Based on development progress tracking (`最新开发进度.txt`), the following
 - **Problem**: Registration endpoint failed when querying `user.permissions` due to `role_permission` table permissions issues.
 - **Solution**: Add exception handling in registration function to return empty list when permission queries fail.
 
+### API Module Import Errors
+- **Problem**: Running `uv run uvicorn app.main:app --reload` returns `AttributeError: module 'app.api.users' has no attribute 'routes'`.
+- **Solution**: Ensure `app/api/__init__.py` exports all API modules. Add `from .users import router as users` and include `"users"` in `__all__` list. Also ensure `app/models/__init__.py` exports all model classes used in schemas.
+
 ### Current Known Limitations
 - Permission system currently returns empty lists; ensure `role_permission` table is properly created and populated with default data.
-- Database migration scripts not yet created (Alembic configured but no initial migration).
-- Frontend directory structure exists but no Vue code implemented.
+- Frontend UI components exist but backend integration for procurement, inventory, finance, analytics, and AI modules is pending.
 - Business logic services and validation schemas pending implementation.
 
 ## Development Tips
@@ -312,14 +339,17 @@ The `.claude/settings.local.json` allows `curl` and `uv run` commands, enabling 
 - `docker-compose.yml`: Multi-service setup for PostgreSQL, pgAdmin, and backend
 - `Dockerfile`: Backend Docker image definition using Python 3.11-slim
 - `.env.example`: Template for environment variables
+- `frontend/vite.config.js`: Vite configuration with proxy to backend
+- `frontend/tailwind.config.js`: Tailwind CSS configuration
+- `frontend/package.json`: Frontend dependencies and scripts
 
 ## Important Notes
 
 - The AI chat feature must **never** allow database modifications
 - All database queries through AI must be read-only
 - Sensitive data (API keys, database credentials) must be in `.env`
-- Database migrations are configured but no initial migration scripts exist yet
-- The frontend directory structure exists but no Vue code is implemented
+- Database migrations are configured with initial migration scripts created
+- Frontend has UI components and service layer but backend integration pending
 - Business logic services and validation schemas are pending implementation
 - The system uses async SQLAlchemy 2.0 with asyncpg for PostgreSQL
 - CORS is configured to allow all origins in development; adjust for production

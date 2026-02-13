@@ -1,0 +1,5 @@
+[POST] http://localhost:5173/api/auth/login => [200] OK
+[GET] http://localhost:5173/api/auth/me => [200] OK
+[GET] http://localhost:5173/api/users => [307] Temporary Redirect
+[GET] http://localhost:5173/api/users/roles/simple/ => [200] OK
+[GET] http://localhost:8000/api/users/ => [401] Unauthorized

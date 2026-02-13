@@ -1,0 +1,40 @@
+- generic [ref=e188]:
+  - generic [ref=e189]:
+    - generic [ref=e190]:
+      - generic [ref=e192]: 📦
+      - heading "智能采购系统" [level=1] [ref=e193]
+      - paragraph [ref=e194]: 企业物资采购管理平台
+    - generic [ref=e195]:
+      - button "登录账户" [ref=e196] [cursor=pointer]
+      - button "注册账户" [ref=e197] [cursor=pointer]
+    - generic [ref=e198]:
+      - generic [ref=e199]:
+        - generic [ref=e200]: 用户名或邮箱
+        - textbox "用户名或邮箱" [ref=e201]:
+          - /placeholder: 请输入用户名或邮箱
+      - generic [ref=e202]:
+        - generic [ref=e203]: 密码
+        - textbox "密码" [ref=e204]:
+          - /placeholder: 请输入密码
+      - generic [ref=e205]:
+        - generic [ref=e206]:
+          - checkbox "记住我" [ref=e207]
+          - generic [ref=e208]: 记住我
+        - link "忘记密码？" [ref=e209] [cursor=pointer]:
+          - /url: "#"
+      - button "登录系统" [ref=e210] [cursor=pointer]
+    - generic [ref=e211]:
+      - generic [ref=e216]: 其他登录方式
+      - generic [ref=e217]:
+        - button "📱 手机验证码" [ref=e218] [cursor=pointer]:
+          - generic [ref=e219]: 📱
+          - text: 手机验证码
+        - button "🖥️ SSO登录" [ref=e220] [cursor=pointer]:
+          - generic [ref=e221]: 🖥️
+          - text: SSO登录
+    - paragraph [ref=e222]:
+      - text: 还没有账户？
+      - button "立即注册" [ref=e223] [cursor=pointer]
+  - generic [ref=e224]:
+    - paragraph [ref=e225]: © 2024 企业智能物资采购管理系统
+    - paragraph [ref=e226]: 版本 v0.1.0 • 技术支持：信息技术部
