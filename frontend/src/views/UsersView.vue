@@ -11,7 +11,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-500">总用户数</p>
-            <p class="text-2xl font-bold mt-2">156</p>
+            <p class="text-2xl font-bold mt-2">{{ userStats.total_users }}</p>
           </div>
           <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
             <span class="text-2xl text-blue-600">👥</span>
@@ -22,7 +22,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-500">管理员</p>
-            <p class="text-2xl font-bold mt-2">8</p>
+            <p class="text-2xl font-bold mt-2">{{ userStats.admin_count }}</p>
           </div>
           <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
             <span class="text-2xl text-red-600">👑</span>
@@ -33,7 +33,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-500">部门领导</p>
-            <p class="text-2xl font-bold mt-2">24</p>
+            <p class="text-2xl font-bold mt-2">{{ userStats.department_head_count }}</p>
           </div>
           <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
             <span class="text-2xl text-green-600">👔</span>
@@ -44,10 +44,155 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-500">活跃用户</p>
-            <p class="text-2xl font-bold mt-2">142</p>
+            <p class="text-2xl font-bold mt-2">{{ userStats.active_users }}</p>
           </div>
           <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
             <span class="text-2xl text-purple-600">✅</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 添加用户对话框 -->
+    <div v-if="showAddDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl mx-4">
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">添加新用户</h2>
+            <button @click="showAddDialog = false" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+          </div>
+          <div class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">用户名 *</label>
+                <input v-model="addUserForm.username" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">邮箱 *</label>
+                <input v-model="addUserForm.email" type="email" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">登录密码 *</label>
+                <input v-model="addUserForm.password" type="password" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">确认密码 *</label>
+                <input type="password" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">真实姓名</label>
+                <input v-model="addUserForm.full_name" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">电话号码</label>
+                <input v-model="addUserForm.phone" type="tel" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">部门</label>
+                <input v-model="addUserForm.department" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+              </div>
+              <div>
+                <label class="block text-sm fontmedium text-gray-700 mb-1">职位</label>
+                <input v-model="addUserForm.position" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">角色</label>
+                <select v-model="addUserForm.role_ids" multiple class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                  <option v-for="role in roles" :key="role.id" :value="role.id">{{ role.name }}</option>
+                </select>
+                <p class="text-xs text-gray-500 mt-1">按住Ctrl键可选择多个角色</p>
+              </div>
+            </div>
+            <div class="flex items-center">
+              <input v-model="addUserForm.is_active" type="checkbox" id="add-active" class="mr-2">
+              <label for="add-active" class="text-sm text-gray-700">用户激活状态</label>
+            </div>
+          </div>
+          <div class="flex justify-end space-x-3 mt-8">
+            <button @click="showAddDialog = false" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">取消</button>
+            <button @click="handleAddUser" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">确定</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 编辑用户对话框 -->
+    <div v-if="showEditDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl mx-4">
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">编辑用户</h2>
+            <button @click="showEditDialog = false" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+          </div>
+          <div class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">用户名 *</label>
+                <input v-model="editUserForm.username" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">邮箱 *</label>
+                <input v-model="editUserForm.email" type="email" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">登录密码</label>
+                <input v-model="editUserForm.password" type="password" placeholder="留空表示不修改" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">确认密码</label>
+                <input type="password" placeholder="留空表示不修改" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">真实姓名</label>
+                <input v-model="editUserForm.full_name" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">电话号码</label>
+                <input v-model="editUserForm.phone" type="tel" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">部门</label>
+                <input v-model="editUserForm.department" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">职位</label>
+                <input v-model="editUserForm.position" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">角色</label>
+                <select v-model="editUserForm.role_ids" multiple class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                  <option v-for="role in roles" :key="role.id" :value="role.id">{{ role.name }}</option>
+                </select>
+                <p class="text-xs text-gray-500 mt-1">按住Ctrl键可选择多个角色</p>
+              </div>
+            </div>
+            <div class="flex items-center">
+              <input v-model="editUserForm.is_active" type="checkbox" id="edit-active" class="mr-2">
+              <label for="edit-active" class="text-sm text-gray-700">用户激活状态</label>
+            </div>
+          </div>
+          <div class="flex justify-end space-x-3 mt-8">
+            <button @click="showEditDialog = false" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">取消</button>
+            <button @click="handleUpdateUser" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">确定</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 删除确认对话框 -->
+    <div v-if="showDeleteDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-xl shadow-lg w-full max-w-md mx-4">
+        <div class="p-6">
+          <div class="flex items-center mb-4">
+            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
+              <span class="text-2xl text-red-600">🗑️</span>
+            </div>
+            <h2 class="text-xl font-bold text-gray-900">确认删除</h2>
+          </div>
+          <p class="text-gray-600 mb-6">确定要删除用户 <strong>{{ userToDelete?.username }}</strong> 吗？此操作不可恢复。</p>
+          <div class="flex justify-end space-x-3">
+            <button @click="showDeleteDialog = false" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">取消</button>
+            <button @click="handleDeleteUser" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">确定删除</button>
           </div>
         </div>
       </div>
@@ -79,39 +224,39 @@
           <option value="inactive">停用</option>
         </select>
       </div>
-      <button class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+      <button @click="openAddDialog" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
         + 添加用户
       </button>
     </div>
 
     <!-- 用户表格 -->
-    <div class="bg-white rounded-xl shadow overflow-hidden mb-8">
+    <div class="bg-white rounded-xl shadow overflow-x-auto mb-8">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider max-w-md">
               用户信息
             </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
               角色
             </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider max-w-xs">
               部门
             </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider max-w-xs">
               最后登录
             </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
               状态
             </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
               操作
             </th>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
           <tr v-if="loading">
-            <td colspan="6" class="px-6 py-4 text-center">
+            <td colspan="6" class="px-2 py-4 text-center">
               <div class="flex justify-center items-center">
                 <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
                 <span class="ml-2">加载中...</span>
@@ -129,7 +274,7 @@
             </td>
           </tr>
           <tr v-for="user in filteredUsers" :key="user.id">
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-2 py-4 whitespace-nowrap max-w-md">
               <div class="flex items-center">
                 <div class="w-10 h-10 bg-gray-300 rounded-full mr-3 flex items-center justify-center">
                   <span class="text-gray-600 text-sm">{{ user.username ? user.username.charAt(0).toUpperCase() : '' }}</span>
@@ -141,25 +286,27 @@
                 </div>
               </div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-2 py-4 whitespace-nowrap">
               <span class="px-2 py-1 text-xs rounded-full" :class="getUserRoleClass(user)">
                 {{ getUserRole(user) }}
               </span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-900 max-w-xs">
               {{ user.department || '-' }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500 max-w-xs">
               {{ formatDate(user.last_login_at) }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-2 py-4 whitespace-nowrap">
               <span class="px-2 py-1 text-xs rounded-full" :class="getUserStatusClass(user)">
                 {{ getUserStatus(user) }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-              <button class="text-primary-600 hover:text-primary-900 mr-3">编辑</button>
-              <button class="text-gray-600 hover:text-gray-900">重置密码</button>
+              <button @click="openEditDialog(user)" class="text-primary-600 hover:text-primary-900 mr-3">编辑</button>
+              <button @click="openDeleteDialog(user)" class="text-red-600 hover:text-red-900">
+                <span class="text-lg">🗑️</span>
+              </button>
             </td>
           </tr>
         </tbody>
@@ -215,6 +362,47 @@ const users = ref([])
 const roles = ref([])
 const loading = ref(true)
 const error = ref(null)
+const userStats = ref({
+  total_users: 0,
+  active_users: 0,
+  inactive_users: 0,
+  admin_count: 0,
+  department_head_count: 0,
+  last_updated: null
+})
+
+// 对话框控制
+const showAddDialog = ref(false)
+const showEditDialog = ref(false)
+const showDeleteDialog = ref(false)
+
+// 表单数据
+const addUserForm = ref({
+  username: '',
+  email: '',
+  password: '',
+  full_name: '',
+  phone: '',
+  department: '',
+  position: '',
+  role_ids: [],
+  is_active: true
+})
+
+const editUserForm = ref({
+  id: null,
+  username: '',
+  email: '',
+  password: '',
+  full_name: '',
+  phone: '',
+  department: '',
+  position: '',
+  role_ids: [],
+  is_active: true
+})
+
+const userToDelete = ref(null)
 
 // 搜索和过滤条件
 const searchQuery = ref('')
@@ -248,11 +436,16 @@ const filteredUsers = computed(() => {
 const fetchUsers = async () => {
   try {
     loading.value = true
-    const response = await usersAPI.getUsers({
+
+    // TODO: Implement role name to ID mapping for server-side filtering
+    // Currently doing client-side filtering due to API expecting role_id (UUID)
+    // Backend API expects role_id parameter, not role name
+    const params = {
       search: searchQuery.value || undefined,
-      role: selectedRole.value !== 'all' ? selectedRole.value : undefined,
       is_active: selectedStatus.value !== 'all' ? (selectedStatus.value === 'active') : undefined
-    })
+    }
+
+    const response = await usersAPI.getUsers(params)
     users.value = response
     error.value = null
   } catch (err) {
@@ -270,6 +463,163 @@ const fetchRoles = async () => {
     roles.value = response
   } catch (err) {
     console.error('获取角色列表失败:', err)
+  }
+}
+
+// 获取用户统计数据
+const fetchUserStatistics = async () => {
+  try {
+    const response = await usersAPI.getUserStatistics()
+    userStats.value = response
+  } catch (err) {
+    console.error('获取用户统计数据失败:', err)
+    // 使用默认值
+    userStats.value = {
+      total_users: 0,
+      active_users: 0,
+      inactive_users: 0,
+      admin_count: 0,
+      department_head_count: 0,
+      last_updated: null
+    }
+  }
+}
+
+// 对话框操作函数
+const openAddDialog = () => {
+  // 重置表单
+  addUserForm.value = {
+    username: '',
+    email: '',
+    password: '',
+    full_name: '',
+    phone: '',
+    department: '',
+    position: '',
+    role_ids: [],
+    is_active: true
+  }
+  showAddDialog.value = true
+}
+
+const openEditDialog = (user) => {
+  // 填充表单数据
+  editUserForm.value = {
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    password: '', // 密码留空，表示不修改
+    full_name: user.full_name || '',
+    phone: user.phone || '',
+    department: user.department || '',
+    position: user.position || '',
+    role_ids: user.role_ids || [],
+    is_active: user.is_active
+  }
+  showEditDialog.value = true
+}
+
+const openDeleteDialog = (user) => {
+  userToDelete.value = user
+  showDeleteDialog.value = true
+}
+
+const handleAddUser = async () => {
+  try {
+    // 简单验证
+    if (!addUserForm.value.username || !addUserForm.value.email || !addUserForm.value.password) {
+      alert('请填写必填字段：用户名、邮箱和密码')
+      return
+    }
+
+    // 准备数据
+    const userData = {
+      username: addUserForm.value.username,
+      email: addUserForm.value.email,
+      password: addUserForm.value.password,
+      full_name: addUserForm.value.full_name,
+      phone: addUserForm.value.phone,
+      department: addUserForm.value.department,
+      position: addUserForm.value.position,
+      role_ids: addUserForm.value.role_ids,
+      is_active: addUserForm.value.is_active
+    }
+
+    await usersAPI.createUser(userData)
+
+    // 刷新数据
+    fetchUsers()
+    fetchUserStatistics()
+
+    // 关闭对话框
+    showAddDialog.value = false
+
+    alert('用户添加成功')
+  } catch (err) {
+    console.error('添加用户失败:', err)
+    alert('添加用户失败：' + (err.response?.data?.detail || err.message))
+  }
+}
+
+const handleUpdateUser = async () => {
+  try {
+    // 简单验证
+    if (!editUserForm.value.username || !editUserForm.value.email) {
+      alert('请填写必填字段：用户名和邮箱')
+      return
+    }
+
+    // 准备数据
+    const updateData = {
+      username: editUserForm.value.username,
+      email: editUserForm.value.email,
+      full_name: editUserForm.value.full_name,
+      phone: editUserForm.value.phone,
+      department: editUserForm.value.department,
+      position: editUserForm.value.position,
+      role_ids: editUserForm.value.role_ids,
+      is_active: editUserForm.value.is_active
+    }
+
+    // 如果有新密码，添加密码字段
+    if (editUserForm.value.password) {
+      updateData.password = editUserForm.value.password
+    }
+
+    await usersAPI.updateUser(editUserForm.value.id, updateData)
+
+    // 刷新数据
+    fetchUsers()
+    fetchUserStatistics()
+
+    // 关闭对话框
+    showEditDialog.value = false
+
+    alert('用户信息更新成功')
+  } catch (err) {
+    console.error('更新用户失败:', err)
+    alert('更新用户失败：' + (err.response?.data?.detail || err.message))
+  }
+}
+
+const handleDeleteUser = async () => {
+  if (!userToDelete.value) return
+
+  try {
+    await usersAPI.deleteUser(userToDelete.value.id)
+
+    // 刷新数据
+    fetchUsers()
+    fetchUserStatistics()
+
+    // 关闭对话框
+    showDeleteDialog.value = false
+    userToDelete.value = null
+
+    alert('用户删除成功')
+  } catch (err) {
+    console.error('删除用户失败:', err)
+    alert('删除用户失败：' + (err.response?.data?.detail || err.message))
   }
 }
 
@@ -309,5 +659,6 @@ const formatDate = (dateString) => {
 onMounted(() => {
   fetchUsers()
   fetchRoles()
+  fetchUserStatistics()
 })
 </script>

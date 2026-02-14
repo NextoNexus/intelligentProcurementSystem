@@ -1,0 +1,8 @@
+INFO:     Will watch for changes in these directories: ['E:\\docs\\skills_learning\\projects\\intelligentProcurementSystem']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [7424] using WatchFiles
+INFO:     Started server process [21780]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app\api\users.py'. Reloading...
+ 

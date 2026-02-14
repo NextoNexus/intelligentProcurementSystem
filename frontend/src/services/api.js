@@ -86,6 +86,9 @@ export const usersAPI = {
   // 获取用户列表（管理员）
   getUsers: (params) => api.get('/users/', { params }),
 
+  // 获取用户统计数据
+  getUserStatistics: () => api.get('/users/statistics/'),
+
   // 获取用户详情
   getUser: (id) => api.get(`/users/${id}`),
 
