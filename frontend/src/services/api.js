@@ -93,7 +93,7 @@ export const usersAPI = {
   getUser: (id) => api.get(`/users/${id}`),
 
   // 创建用户
-  createUser: (data) => api.post('/users', data),
+  createUser: (data) => api.post('/users/', data),
 
   // 更新用户
   updateUser: (id, data) => api.put(`/users/${id}`, data),

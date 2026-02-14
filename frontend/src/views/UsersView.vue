@@ -305,7 +305,7 @@
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
               <button @click="openEditDialog(user)" class="text-primary-600 hover:text-primary-900 mr-3">编辑</button>
               <button @click="openDeleteDialog(user)" class="text-red-600 hover:text-red-900">
-                <span class="text-lg">🗑️</span>
+                <span class="text-md">删除</span>
               </button>
             </td>
           </tr>
