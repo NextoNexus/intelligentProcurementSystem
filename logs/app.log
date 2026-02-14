@@ -189,3 +189,44 @@ FROM supplier ORDER BY supplier.created_at DESC
 2026-02-14 20:14:09,058 - app.main - INFO - 数据库初始化已禁用，使用Alembic迁移
 2026-02-14 20:15:33,094 - app.main - INFO - 关闭应用...
 2026-02-14 20:15:33,095 - app.main - INFO - 数据库连接已关闭
+2026-02-14 20:17:54,568 - app.main - INFO - 启动智能物资采购系统 v0.1.0
+2026-02-14 20:17:54,568 - app.main - INFO - 调试模式: True
+2026-02-14 20:17:54,568 - app.main - INFO - 数据库初始化已禁用，使用Alembic迁移
+2026-02-14 20:18:20,720 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2026-02-14 20:18:20,720 - sqlalchemy.engine.Engine - INFO - SELECT "user".username, "user".email, "user".hashed_password, "user".full_name, "user".phone, "user".avatar_url, "user".is_active, "user".is_verified, "user".last_login_at, "user".last_login_ip, "user".employee_id, "user".department, "user".position, "user".hire_date, "user".id, "user".created_at, "user".updated_at, "user".is_deleted, "user".deleted_at 
+FROM "user" 
+WHERE "user".username = $1::VARCHAR OR "user".email = $2::VARCHAR
+2026-02-14 20:18:20,720 - sqlalchemy.engine.Engine - INFO - [cached since 420.3s ago] ('admin', 'admin')
+2026-02-14 20:18:20,722 - sqlalchemy.engine.Engine - INFO - SELECT user_1.id AS user_1_id, role.name AS role_name, role.description AS role_description, role.is_system AS role_is_system, role.id AS role_id, role.created_at AS role_created_at, role.updated_at AS role_updated_at, role.is_deleted AS role_is_deleted, role.deleted_at AS role_deleted_at 
+FROM "user" AS user_1 JOIN user_role AS user_role_1 ON user_1.id = user_role_1.user_id JOIN role ON role.id = user_role_1.role_id 
+WHERE user_1.id IN ($1::UUID)
+2026-02-14 20:18:20,722 - sqlalchemy.engine.Engine - INFO - [cached since 420.2s ago] (UUID('180896e3-49fb-435d-8343-c69736d7dc9c'),)
+2026-02-14 20:18:20,724 - sqlalchemy.engine.Engine - INFO - SELECT role_1.id AS role_1_id, permission.code AS permission_code, permission.name AS permission_name, permission.description AS permission_description, permission.module AS permission_module, permission.id AS permission_id, permission.created_at AS permission_created_at, permission.updated_at AS permission_updated_at, permission.is_deleted AS permission_is_deleted, permission.deleted_at AS permission_deleted_at 
+FROM role AS role_1 JOIN role_permission AS role_permission_1 ON role_1.id = role_permission_1.role_id JOIN permission ON permission.id = role_permission_1.permission_id 
+WHERE role_1.id IN ($1::UUID)
+2026-02-14 20:18:20,724 - sqlalchemy.engine.Engine - INFO - [cached since 420.2s ago] (UUID('68ad22a0-4dc4-4264-bfdd-e0464f07defe'),)
+2026-02-14 20:18:20,742 - sqlalchemy.engine.Engine - INFO - UPDATE "user" SET last_login_at=$1::TIMESTAMP WITHOUT TIME ZONE, updated_at=$2::TIMESTAMP WITHOUT TIME ZONE WHERE "user".id = $3::UUID
+2026-02-14 20:18:20,742 - sqlalchemy.engine.Engine - INFO - [cached since 420.2s ago] (datetime.datetime(2026, 2, 14, 12, 18, 20, 740983), datetime.datetime(2026, 2, 14, 12, 18, 20, 742028), UUID('180896e3-49fb-435d-8343-c69736d7dc9c'))
+2026-02-14 20:18:20,742 - sqlalchemy.engine.Engine - INFO - COMMIT
+2026-02-14 20:18:20,755 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2026-02-14 20:18:20,755 - sqlalchemy.engine.Engine - INFO - SELECT "user".username, "user".email, "user".hashed_password, "user".full_name, "user".phone, "user".avatar_url, "user".is_active, "user".is_verified, "user".last_login_at, "user".last_login_ip, "user".employee_id, "user".department, "user".position, "user".hire_date, "user".id, "user".created_at, "user".updated_at, "user".is_deleted, "user".deleted_at 
+FROM "user" 
+WHERE "user".id = $1::UUID
+2026-02-14 20:18:20,755 - sqlalchemy.engine.Engine - INFO - [cached since 321.7s ago] ('180896e3-49fb-435d-8343-c69736d7dc9c',)
+2026-02-14 20:18:20,756 - sqlalchemy.engine.Engine - INFO - SELECT user_1.id AS user_1_id, role.name AS role_name, role.description AS role_description, role.is_system AS role_is_system, role.id AS role_id, role.created_at AS role_created_at, role.updated_at AS role_updated_at, role.is_deleted AS role_is_deleted, role.deleted_at AS role_deleted_at 
+FROM "user" AS user_1 JOIN user_role AS user_role_1 ON user_1.id = user_role_1.user_id JOIN role ON role.id = user_role_1.role_id 
+WHERE user_1.id IN ($1::UUID)
+2026-02-14 20:18:20,757 - sqlalchemy.engine.Engine - INFO - [cached since 420.3s ago] (UUID('180896e3-49fb-435d-8343-c69736d7dc9c'),)
+2026-02-14 20:18:20,758 - sqlalchemy.engine.Engine - INFO - SELECT role_1.id AS role_1_id, permission.code AS permission_code, permission.name AS permission_name, permission.description AS permission_description, permission.module AS permission_module, permission.id AS permission_id, permission.created_at AS permission_created_at, permission.updated_at AS permission_updated_at, permission.is_deleted AS permission_is_deleted, permission.deleted_at AS permission_deleted_at 
+FROM role AS role_1 JOIN role_permission AS role_permission_1 ON role_1.id = role_permission_1.role_id JOIN permission ON permission.id = role_permission_1.permission_id 
+WHERE role_1.id IN ($1::UUID)
+2026-02-14 20:18:20,758 - sqlalchemy.engine.Engine - INFO - [cached since 420.3s ago] (UUID('68ad22a0-4dc4-4264-bfdd-e0464f07defe'),)
+2026-02-14 20:18:20,759 - sqlalchemy.engine.Engine - INFO - COMMIT
+2026-02-14 20:18:26,480 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2026-02-14 20:18:26,480 - sqlalchemy.engine.Engine - INFO - SELECT supplier.name, supplier.code, supplier.type, supplier.status, supplier.contact_person, supplier.contact_phone, supplier.contact_email, supplier.contact_address, supplier.company_name, supplier.registration_number, supplier.tax_number, supplier.business_scope, supplier.registered_capital, supplier.established_date, supplier.qualification_level, supplier.qualification_certificates, supplier.quality_system, supplier.industry_certifications, supplier.overall_rating, supplier.quality_rating, supplier.delivery_rating, supplier.service_rating, supplier.price_rating, supplier.assessment_date, supplier.cooperation_start_date, supplier.total_transaction_amount, supplier.total_transaction_count, supplier.last_transaction_date, supplier.bank_name, supplier.bank_account, supplier.account_name, supplier.credit_limit, supplier.payment_terms, supplier.remarks, supplier.tags, supplier.attachments, supplier.id, supplier.created_at, supplier.updated_at, supplier.is_deleted, supplier.deleted_at 
+FROM supplier ORDER BY supplier.created_at DESC 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER
+2026-02-14 20:18:26,481 - sqlalchemy.engine.Engine - INFO - [cached since 426s ago] (100, 0)
+2026-02-14 20:18:26,482 - sqlalchemy.engine.Engine - INFO - COMMIT
+2026-02-14 20:19:40,525 - app.main - INFO - 关闭应用...
+2026-02-14 20:19:40,528 - app.main - INFO - 数据库连接已关闭
