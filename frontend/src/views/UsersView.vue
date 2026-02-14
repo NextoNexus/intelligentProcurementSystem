@@ -53,6 +53,57 @@
       </div>
     </div>
 
+    <!-- 第二行用户统计 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div class="bg-white rounded-xl shadow p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500">员工数量</p>
+            <p class="text-2xl font-bold mt-2">{{ userStats.employee_count }}</p>
+          </div>
+          <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+            <span class="text-2xl text-yellow-600">👤</span>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl shadow p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500">最近7天新增</p>
+            <p class="text-2xl font-bold mt-2">{{ userStats.recent_users_7d }}</p>
+          </div>
+          <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+            <span class="text-2xl text-indigo-600">📈</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 部门分布统计 -->
+    <div class="bg-white rounded-xl shadow p-6 mb-8">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold text-gray-900">部门用户分布</h3>
+        <span class="text-sm text-gray-500">共 {{ userStats.department_stats.length }} 个部门</span>
+      </div>
+      <div v-if="userStats.department_stats.length > 0">
+        <div class="space-y-3">
+          <div v-for="dept in userStats.department_stats" :key="dept.department" class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+            <div class="flex items-center">
+              <div class="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+              <span class="font-medium text-gray-800">{{ dept.department || '未分配部门' }}</span>
+            </div>
+            <div class="flex items-center">
+              <span class="text-lg font-bold text-gray-900 mr-2">{{ dept.count }}</span>
+              <span class="text-sm text-gray-500">人</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div v-else class="text-center py-8 text-gray-500">
+        <p>暂无部门分布数据</p>
+      </div>
+    </div>
+
     <!-- 添加用户对话框 -->
     <div v-if="showAddDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl mx-4">
@@ -368,7 +419,11 @@ const userStats = ref({
   inactive_users: 0,
   admin_count: 0,
   department_head_count: 0,
-  last_updated: null
+  employee_count: 0,
+  recent_users_7d: 0,
+  department_stats: [],
+  last_updated: null,
+  status: ''
 })
 
 // 对话框控制
@@ -480,7 +535,11 @@ const fetchUserStatistics = async () => {
       inactive_users: 0,
       admin_count: 0,
       department_head_count: 0,
-      last_updated: null
+      employee_count: 0,
+      recent_users_7d: 0,
+      department_stats: [],
+      last_updated: null,
+      status: ''
     }
   }
 }

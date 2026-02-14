@@ -3,7 +3,7 @@
 """
 from typing import List, Optional
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
@@ -12,7 +12,7 @@ from sqlalchemy.orm import selectinload
 from ..core.database import get_db
 from ..core.security import get_password_hash
 from ..core.dependencies import get_current_user, require_role
-from ..models.user import User, Role, Permission
+from ..models.user import User, Role, Permission, user_role
 from ..schemas.user import (
     UserCreate, UserUpdate, UserResponse, UserSimpleResponse
 )
@@ -107,16 +107,102 @@ async def get_user_statistics(
 
     返回总用户数、管理员数、部门领导数、活跃用户数等
     """
-    # 最简单版本：先测试端点是否可以响应
-    return {
-        "total_users": 4,
-        "active_users": 4,
-        "inactive_users": 0,
-        "admin_count": 1,
-        "department_head_count": 0,
-        "last_updated": datetime.utcnow(),
-        "status": "working"
-    }
+    try:
+        # 总用户数
+        total_result = await db.execute(select(func.count()).select_from(User))
+        total_users = total_result.scalar() or 0
+
+        # 活跃用户数
+        active_result = await db.execute(
+            select(func.count()).select_from(User).where(User.is_active == True)
+        )
+        active_users = active_result.scalar() or 0
+
+        # 非活跃用户数
+        inactive_users = total_users - active_users
+
+        # 管理员数量（角色名为'admin'）
+        admin_count_result = await db.execute(
+            select(func.count(func.distinct(User.id)))
+            .select_from(User)
+            .join(user_role, User.id == user_role.c.user_id)
+            .join(Role, Role.id == user_role.c.role_id)
+            .where(Role.name == "admin")
+        )
+        admin_count = admin_count_result.scalar() or 0
+
+        # 部门领导数量（角色名为'department_head'或'manager'）
+        # 首先检查哪些角色名称存在
+        dept_head_count = 0
+        # 尝试查询'department_head'角色
+        dept_head_result = await db.execute(
+            select(func.count(func.distinct(User.id)))
+            .select_from(User)
+            .join(user_role, User.id == user_role.c.user_id)
+            .join(Role, Role.id == user_role.c.role_id)
+            .where(Role.name.in_(["department_head", "manager"]))
+        )
+        dept_head_count = dept_head_result.scalar() or 0
+
+        # 按部门统计用户分布
+        department_stats_result = await db.execute(
+            select(User.department, func.count(User.id).label("count"))
+            .where(User.department.isnot(None))
+            .group_by(User.department)
+            .order_by(func.count(User.id).desc())
+        )
+        department_stats = [
+            {"department": dept, "count": count}
+            for dept, count in department_stats_result.all()
+        ]
+
+        # 最近7天新增用户数
+        seven_days_ago = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=7)
+        recent_users_result = await db.execute(
+            select(func.count()).select_from(User)
+            .where(User.created_at >= seven_days_ago)
+        )
+        recent_users = recent_users_result.scalar() or 0
+
+        # 员工数量（角色名为'employee'）
+        employee_count_result = await db.execute(
+            select(func.count(func.distinct(User.id)))
+            .select_from(User)
+            .join(user_role, User.id == user_role.c.user_id)
+            .join(Role, Role.id == user_role.c.role_id)
+            .where(Role.name == "employee")
+        )
+        employee_count = employee_count_result.scalar() or 0
+
+        return {
+            "total_users": total_users,
+            "active_users": active_users,
+            "inactive_users": inactive_users,
+            "admin_count": admin_count,
+            "department_head_count": dept_head_count,
+            "employee_count": employee_count,
+            "recent_users_7d": recent_users,
+            "department_stats": department_stats,
+            "last_updated": datetime.utcnow(),
+            "status": "working"
+        }
+
+    except Exception as e:
+        # 记录错误并返回错误信息
+        import logging
+        logging.error(f"获取用户统计数据失败: {str(e)}")
+        return {
+            "total_users": 0,
+            "active_users": 0,
+            "inactive_users": 0,
+            "admin_count": 0,
+            "department_head_count": 0,
+            "employee_count": 0,
+            "recent_users_7d": 0,
+            "department_stats": [],
+            "last_updated": datetime.utcnow(),
+            "status": f"error: {str(e)}"
+        }
 
 
 @router.get("/{user_id}", response_model=UserResponse, dependencies=[Depends(require_role("admin"))])
