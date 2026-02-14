@@ -40,10 +40,37 @@ Based on requirements document (`企业智能物资采购系统需求汇总.txt`
 | **Business Logic Services** | ❌ Not started | `app/services/` directory exists but empty |
 | **Validation Schemas** | ✅ Implemented | User, Role, Permission, Supplier, SupplierProduct, SupplierEvaluation schemas implemented in `app/schemas/` |
 | **AI Integration** | ⚠️ Structure only | `app/ai/` directory exists; pydantic_ai agents not implemented |
-| **Database Migrations** | ✅ Implemented | Alembic configured with initial migration scripts (`a3206323f0db_initial_tables.py`) |
+| **Database Migrations** | ✅ Implemented | Alembic configured with initial migration scripts (`a3206323f0db_initial_tables.py` is active; `b01260bc56af_initial.py` appears to be outdated) |
 | **Frontend Structure** | ✅ Partially Implemented | Vue 3 UI components, routing, Pinia stores, API service layer; three-column layout with AI chat sidebar (hidden by default) |
 | **Frontend Backend Integration** | ⚠️ Partial | User Management and Supplier Management frontend views connected to backend APIs; other modules pending |
 | **Testing** | ❌ Not started | `tests/` directory exists but empty |
+
+### API Router Status
+
+| Router | Mounted | Implementation | Notes |
+|--------|---------|----------------|-------|
+| `auth` | ✅ Yes (`/api/auth`) | ✅ Fully implemented | Registration, login, token refresh |
+| `users` | ✅ Yes (`/api/users`) | ✅ Fully implemented | User, role, permission management |
+| `suppliers` | ✅ Yes (`/api/suppliers`) | ✅ Fully implemented | Supplier CRUD, products, evaluations |
+| `procurement` | ✅ Yes (`/api/procurement`) | ⚠️ Placeholder endpoints | Basic GET/POST endpoints return placeholder messages |
+| `inventory` | ✅ Yes (`/api/inventory`) | ⚠️ Placeholder endpoints | Basic GET/POST endpoints return placeholder messages |
+| `ai` | ✅ Yes (`/api/ai`) | ⚠️ Placeholder endpoints | Chat and query endpoints return placeholder messages |
+| `finance` | ❌ No | ⚠️ Placeholder router | Router exists but not mounted in `app/main.py` |
+| `analytics` | ❌ No | ⚠️ Placeholder router | Router exists but not mounted in `app/main.py` |
+| `reports` | ❌ No | ⚠️ Placeholder router | Router exists but not mounted in `app/main.py` |
+
+### Frontend-Backend Integration Status
+
+| Frontend View (`frontend/src/views/`) | Backend API | Status |
+|----------------------------------------|-------------|--------|
+| `UsersView.vue` | `/api/users/*` | ✅ Connected - Full CRUD operations |
+| `SuppliersView.vue` | `/api/suppliers/*` | ✅ Connected - Search, filtering, rating display |
+| `ProcurementView.vue` | `/api/procurement/*` | ⚠️ API placeholders only |
+| `InventoryView.vue` | `/api/inventory/*` | ⚠️ API placeholders only |
+| `FinanceView.vue` | `/api/finance/*` | ❌ Backend router not mounted |
+| `AnalyticsView.vue` | `/api/analytics/*` | ❌ Backend router not mounted |
+| `DashboardView.vue` | N/A | Static dashboard |
+| `LoginView.vue` | `/api/auth/*` | ✅ Login/registration ready |
 
 **Key Working Components:**
 - User registration endpoint (`POST /auth/register`) tested and functional
@@ -87,11 +114,55 @@ Based on requirements document (`企业智能物资采购系统需求汇总.txt`
 - Tailwind CSS 4 for styling, with Vite as build tool
 - API service layer with axios interceptors and proxy configuration to backend
 - Three-column layout with AI chat sidebar implemented
+- Vite proxy configuration: Frontend dev server (`localhost:5173`) proxies API requests to backend (`localhost:8000`) via `frontend/vite.config.js`
 
 ### Database
 - PostgreSQL 18 required locally or via Docker
 - Database migrations using Alembic (configured in `alembic.ini`)
 - Docker Compose includes PostgreSQL and pgAdmin services
+
+## Quick Start
+
+### 1. Setup Environment
+```bash
+# Install backend dependencies
+uv sync
+
+# Copy environment configuration
+cp .env.example .env
+# Edit .env: Set DATABASE_URL, SECRET_KEY, AI_PROVIDER_API_KEY
+
+# Install frontend dependencies
+cd frontend
+npm install
+cd ..
+```
+
+### 2. Database Setup
+```bash
+# Start PostgreSQL (Docker)
+docker-compose up postgres -d
+
+# Apply migrations (uses a3206323f0db_initial_tables.py)
+uv run alembic upgrade head
+
+# Optional: Create admin user
+uv run python create_admin.py
+```
+
+### 3. Run Development Servers
+```bash
+# Terminal 1: Backend (port 8000)
+uv run uvicorn app.main:app --reload
+
+# Terminal 2: Frontend (port 5173)
+cd frontend && npm run dev
+```
+
+Access:
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:8000
+- API Docs: http://localhost:8000/docs (when debug=True)
 
 ## Common Commands
 
@@ -168,6 +239,9 @@ docker-compose down
 
 # View logs
 docker-compose logs -f
+
+# Start backend with Docker only (without frontend)
+docker-compose up backend
 ```
 
 ### Utility Commands
@@ -182,11 +256,17 @@ uv run python test_reg_fix.py
 uv run python create_admin.py
 
 # Clear Python cache (fix import issues)
+# Unix/Linux/macOS:
 find . -name "__pycache__" -type d -exec rm -rf {} +
 find . -name "*.pyc" -delete
 
-# Start backend with Docker only (without frontend)
-docker-compose up backend
+# Windows (Command Prompt):
+rmdir /s /q __pycache__ 2>nul
+del /s /q *.pyc 2>nul
+
+# Windows (PowerShell):
+Get-ChildItem -Path . -Include __pycache__ -Recurse -Directory | Remove-Item -Recurse -Force
+Get-ChildItem -Path . -Include *.pyc -Recurse -File | Remove-Item -Force
 
 # Run specific backend module (e.g., auth tests)
 uv run pytest app/api/auth/ -v
@@ -228,6 +308,7 @@ The system follows a modular monolith architecture with clear separation:
 - **API Structure**: FastAPI routers organized by business domain (auth, users, suppliers, procurement, inventory, ai, finance, analytics, reports)
 - **Async Database**: SQLAlchemy 2.0 async engine with asyncpg driver for PostgreSQL
 - **Migration Ready**: Alembic configured with initial migration scripts created
+- **Frontend Proxy**: Vite dev server proxies `/api/*` to backend (`localhost:8000`) via `frontend/vite.config.js`
 
 ### Key Design Patterns
 - **Left-Menu-Right-Chat Layout**: Persistent left navigation, main content area, right-side AI chat panel
@@ -253,7 +334,7 @@ The system follows a modular monolith architecture with clear separation:
 
 2. **Database**:
    - Ensure PostgreSQL is running (port 5432)
-   - Apply existing migrations: `uv run alembic upgrade head`
+   - Apply existing migrations: `uv run alembic upgrade head` (uses `a3206323f0db_initial_tables.py`)
    - (If model changes) Create new migration: `uv run alembic revision --autogenerate -m "description"`
 
 3. **Running**:
@@ -269,8 +350,6 @@ The system follows a modular monolith architecture with clear separation:
 
 ## Troubleshooting and Known Issues
 
-Based on development progress tracking (`最新开发进度.txt`), the following issues have been encountered and resolved:
-
 ### Module Import Conflicts
 - **Problem**: Old backup files (`app/api/auth/routes.py.backup`, `app/api/auth/__init__.py.backup`) caused Python module cache to load incorrect UserProfile model definitions.
 - **Solution**: Remove or rename backup files outside the module directory, and clear `__pycache__` directories.
@@ -285,24 +364,38 @@ Based on development progress tracking (`最新开发进度.txt`), the following
 
 ### Permission Table Query Exceptions
 - **Problem**: Registration endpoint failed when querying `user.permissions` due to `role_permission` table permissions issues.
-- **Solution**: Add exception handling in registration function to return empty list when permission queries fail.
+- **Solution**: Add exception handling in registration function to return empty list when permission queries fail. Ensure `role_permission` table is properly created and populated with default data.
 
 ### API Module Import Errors
 - **Problem**: Running `uv run uvicorn app.main:app --reload` returns `AttributeError: module 'app.api.users' has no attribute 'routes'`.
 - **Solution**: Ensure `app/api/__init__.py` exports all API modules. Add `from .users import router as users` and include `"users"` in `__all__` list. Also ensure `app/models/__init__.py` exports all model classes used in schemas.
 
+### Migration File Conflicts
+- **Problem**: Two migration files exist: `a3206323f0db_initial_tables.py` and `b01260bc56af_initial.py`
+- **Solution**: `a3206323f0db_initial_tables.py` is the active migration. `b01260bc56af_initial.py` appears to be outdated but can be safely ignored. Always run `uv run alembic upgrade head` to apply the latest migration.
+
 ### Current Known Limitations
 - Permission system currently returns empty lists; ensure `role_permission` table is properly created and populated with default data.
 - Frontend UI components exist but backend integration for procurement, inventory, finance, analytics, and AI modules is pending.
 - Business logic services and validation schemas pending implementation.
+- Finance, Analytics, and Reports API routers exist but are not mounted in `app/main.py`.
 
 ## Development Tips
 
 ### Clearing Python Cache
 When encountering module import errors:
 ```bash
+# Unix/Linux/macOS
 find . -name "__pycache__" -type d -exec rm -rf {} +
 find . -name "*.pyc" -delete
+
+# Windows Command Prompt
+rmdir /s /q __pycache__ 2>nul
+del /s /q *.pyc 2>nul
+
+# Windows PowerShell
+Get-ChildItem -Path . -Include __pycache__ -Recurse -Directory | Remove-Item -Recurse -Force
+Get-ChildItem -Path . -Include *.pyc -Recurse -File | Remove-Item -Force
 ```
 
 ### Testing Registration Endpoint
@@ -331,17 +424,18 @@ The `.claude/settings.local.json` allows `curl` and `uv run` commands, enabling 
 - `uv.lock`: Locked dependencies for reproducible builds
 - `.env`: Environment variables (database URLs, API keys, secrets) - **NOT committed**
   - `DATABASE_URL`: PostgreSQL connection string (default: postgresql://user:password@localhost:5432/procurement_db)
-  - `SECRET_KEY`: Application secret for JWT/sessions
+  - `SECRET_KEY`: Application secret for JWT/sessions (min 32 characters)
   - `AI_PROVIDER_API_KEY`: API key for AI service (OpenAI, Anthropic, etc.)
   - `AI_MODEL`: Model identifier (e.g., "gpt-4o-mini")
-  - `DEBUG`: Enable debug mode (default: False)
+  - `DEBUG`: Enable debug mode (default: False) - controls API docs visibility
 - `alembic.ini`: Database migration configuration with PostgreSQL URL
 - `docker-compose.yml`: Multi-service setup for PostgreSQL, pgAdmin, and backend
 - `Dockerfile`: Backend Docker image definition using Python 3.11-slim
 - `.env.example`: Template for environment variables
-- `frontend/vite.config.js`: Vite configuration with proxy to backend
+- `frontend/vite.config.js`: Vite configuration with proxy to backend (`/api/*` → `localhost:8000`)
 - `frontend/tailwind.config.js`: Tailwind CSS configuration
 - `frontend/package.json`: Frontend dependencies and scripts
+- `.claude/settings.local.json`: Claude Code permissions allowing `curl` and `uv run` commands
 
 ## Important Notes
 
@@ -353,3 +447,6 @@ The `.claude/settings.local.json` allows `curl` and `uv run` commands, enabling 
 - Business logic services and validation schemas are pending implementation
 - The system uses async SQLAlchemy 2.0 with asyncpg for PostgreSQL
 - CORS is configured to allow all origins in development; adjust for production
+- Two migration files exist; `a3206323f0db_initial_tables.py` is the active one
+- Finance, Analytics, and Reports API routers exist but are not mounted in the main app
+- Frontend development server proxies API requests via Vite configuration

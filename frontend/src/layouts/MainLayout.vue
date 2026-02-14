@@ -29,7 +29,7 @@
         </div>
 
         <!-- 用户信息 -->
-        <div v-if="false" class="mt-auto pt-6 border-t border-gray-200">
+        <div v-if="authStore.isAuthenticated" class="mt-auto pt-6 border-t border-gray-200">
           <div class="flex items-center space-x-3 px-4 py-3">
             <div class="w-10 h-10 bg-gradient-to-r from-primary-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold">
               {{ userInitial }}
@@ -58,7 +58,7 @@
     </main>
 
     <!-- 右侧AI聊天栏 -->
-    <aside v-if="false" class="w-80 bg-white border-l border-gray-200 flex flex-col">
+    <aside v-if="showChatPanel" class="w-80 bg-white border-l border-gray-200 flex flex-col">
       <!-- AI聊天头部 -->
       <div class="p-4 border-b border-gray-200">
         <div class="flex items-center justify-between">
@@ -128,6 +128,8 @@ const menuItems = ref([
   { id: 6, label: '报表分析', path: '/analytics', icon: '📈' },
   { id: 7, label: '用户管理', path: '/users', icon: '👥' },
 ])
+
+const showChatPanel = ref(true)
 
 const userInfo = computed(() => authStore.userInfo)
 const userFullName = computed(() => userInfo.value?.fullName || userInfo.value?.username || '当前用户')
