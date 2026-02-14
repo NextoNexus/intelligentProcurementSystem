@@ -1,9 +1,0 @@
-Total messages: 8 (Errors: 0, Warnings: 0)
-Returning 6 messages for level "info"
-
-[VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:5173/login:0
-[LOG] MainLayout mounted @ http://localhost:5173/src/layouts/MainLayout.vue?t=1770987411325:14
-[LOG] authStore.user: Proxy(Object) @ http://localhost:5173/src/layouts/MainLayout.vue?t=1770987411325:15
-[LOG] authStore.userInfo: {id: 180896e3-49fb-435d-8343-c69736d7dc9c, username: admin, email: admin@company.com, fullName: 系统管理员, department: 信息技术部} @ http://localhost:5173/src/layouts/MainLayout.vue?t=1770987411325:16
-[LOG] userFullName.value: 系统管理员 @ http://localhost:5173/src/layouts/MainLayout.vue?t=1770987411325:17
-[LOG] userRole.value: 管理员 @ http://localhost:5173/src/layouts/MainLayout.vue?t=1770987411325:18

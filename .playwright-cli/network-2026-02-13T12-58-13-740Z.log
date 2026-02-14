@@ -1,4 +1,0 @@
-[POST] http://localhost:5173/api/auth/login => [200] OK
-[GET] http://localhost:5173/api/auth/me => [200] OK
-[GET] http://localhost:5173/api/users/ => [200] OK
-[GET] http://localhost:5173/api/users/roles/simple/ => [200] OK
