@@ -43,14 +43,14 @@ Based on requirements document (`企业智能物资采购系统需求汇总.txt`
 | **Database Migrations** | ✅ Implemented | Alembic configured with initial migration scripts (`a3206323f0db_initial_tables.py` is active; `b01260bc56af_initial.py` appears to be outdated) |
 | **Frontend Structure** | ✅ Partially Implemented | Vue 3 UI components, routing, Pinia stores, API service layer; three-column layout with AI chat sidebar (hidden by default) |
 | **Frontend Backend Integration** | ⚠️ Partial | User Management and Supplier Management frontend views connected to backend APIs; other modules pending |
-| **Testing** | ❌ Not started | `tests/` directory exists but empty |
+| **Testing** | ❌ Not started | `tests/` directory exists but empty; example test scripts in root (test_user_management.py, etc.) |
 
 ### API Router Status
 
 | Router | Mounted | Implementation | Notes |
 |--------|---------|----------------|-------|
 | `auth` | ✅ Yes (`/api/auth`) | ✅ Fully implemented | Registration, login, token refresh |
-| `users` | ✅ Yes (`/api/users`) | ✅ Fully implemented | User, role, permission management |
+| `users` | ✅ Yes (`/api/users`) | ✅ Fully implemented | User, role, permission management, statistics |
 | `suppliers` | ✅ Yes (`/api/suppliers`) | ✅ Fully implemented | Supplier CRUD, products, evaluations |
 | `procurement` | ✅ Yes (`/api/procurement`) | ⚠️ Placeholder endpoints | Basic GET/POST endpoints return placeholder messages |
 | `inventory` | ✅ Yes (`/api/inventory`) | ⚠️ Placeholder endpoints | Basic GET/POST endpoints return placeholder messages |
@@ -63,7 +63,7 @@ Based on requirements document (`企业智能物资采购系统需求汇总.txt`
 
 | Frontend View (`frontend/src/views/`) | Backend API | Status |
 |----------------------------------------|-------------|--------|
-| `UsersView.vue` | `/api/users/*` | ✅ Connected - Full CRUD operations |
+| `UsersView.vue` | `/api/users/*` | ✅ Connected - Full CRUD operations, statistics |
 | `SuppliersView.vue` | `/api/suppliers/*` | ✅ Connected - Search, filtering, rating display |
 | `ProcurementView.vue` | `/api/procurement/*` | ⚠️ API placeholders only |
 | `InventoryView.vue` | `/api/inventory/*` | ⚠️ API placeholders only |
@@ -82,7 +82,7 @@ Based on requirements document (`企业智能物资采购系统需求汇总.txt`
 - Frontend three-column layout with Vue 3 components, routing, and Pinia state management
 - Frontend API service layer with axios interceptors and auth store
 - Vite development server with proxy to backend API
-- User Management API with full CRUD operations, role and permission management
+- User Management API with full CRUD operations, role and permission management, statistics
 - Supplier Management API with CRUD operations, product management, and evaluation system
 - Pydantic validation schemas for User, Role, Permission, Supplier models
 - Frontend User Management view with search, filtering, and real-time data
@@ -317,6 +317,13 @@ The system follows a modular monolith architecture with clear separation:
 - **AI Integration**: pydantic_ai agents with MCP servers for database query capabilities (read-only)
 - **RESTful APIs**: Backend provides JSON APIs for frontend consumption
 - **Async Database Operations**: SQLAlchemy 2.0 async API with asyncpg driver
+
+### API Development Patterns
+- **Single-file modules**: Each business domain API is implemented as a single file in `app/api/` (e.g., `users.py`, `suppliers.py`).
+- **Dependency injection**: Use `get_current_user`, `require_role`, `require_permission` synchronous dependency functions (not async due to FastAPI constraints).
+- **New route pattern**: Import `APIRouter` from fastapi, define `router = APIRouter()`, add endpoints with appropriate dependencies and response models.
+- **Placeholder routers**: Finance, Analytics, Reports routers exist but are not mounted in `app/main.py` (need manual mounting).
+- **Statistics endpoints**: User management includes `/users/statistics/` endpoint for admin analytics.
 
 ### AI Chat Feature Constraints
 - Text-only chat (no file uploads or multimedia)
