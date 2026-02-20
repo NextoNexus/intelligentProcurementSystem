@@ -249,6 +249,156 @@
       </div>
     </div>
 
+    <!-- 添加角色对话框 -->
+    <div v-if="showAddRoleDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-xl shadow-lg w-full max-w-lg mx-4">
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">添加新角色</h2>
+            <button @click="showAddRoleDialog = false" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+          </div>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">角色名称 *</label>
+              <input v-model="addRoleForm.name" type="text" placeholder="例如：admin、manager、employee" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+              <p class="text-xs text-gray-500 mt-1">角色名称应简洁明了，用于标识角色</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">角色描述</label>
+              <textarea v-model="addRoleForm.description" rows="3" placeholder="描述角色的职责和权限范围" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"></textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">分配权限</label>
+              <div v-if="permissions.length > 0" class="max-h-60 overflow-y-auto border border-gray-300 rounded-lg">
+                <div v-for="(modulePerms, moduleName) in groupedPermissionsForAdd" :key="moduleName" class="border-b border-gray-200 last:border-0">
+                  <div class="sticky top-0 bg-gray-50 px-3 py-2 border-b border-gray-200">
+                    <h3 class="font-medium text-sm text-gray-700">{{ moduleName }} 模块</h3>
+                  </div>
+                  <div class="p-2">
+                    <div class="space-y-1">
+                      <div v-for="permission in modulePerms" :key="permission.id" class="flex items-center p-2 hover:bg-gray-50 rounded">
+                        <input
+                          type="checkbox"
+                          :id="'perm-' + permission.id"
+                          :value="permission.id"
+                          v-model="addRoleForm.permission_ids"
+                          class="mr-2"
+                        >
+                        <label :for="'perm-' + permission.id" class="text-sm text-gray-700 flex-1 cursor-pointer">
+                          <div class="font-medium">{{ permission.name }}</div>
+                          <div class="text-xs text-gray-500">{{ permission.code }}</div>
+                          <div v-if="permission.description" class="text-xs text-gray-400 mt-1">{{ permission.description }}</div>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="text-center py-4 text-gray-500 border border-gray-300 rounded-lg">
+                <p>暂无权限数据</p>
+                <button type="button" @click="fetchPermissions" class="mt-2 text-sm text-primary-600 hover:text-primary-800">
+                  加载权限
+                </button>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">选择该角色应拥有的权限</p>
+            </div>
+          </div>
+          <div class="flex justify-end space-x-3 mt-8">
+            <button @click="showAddRoleDialog = false" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">取消</button>
+            <button @click="handleAddRole" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">确定</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 管理权限对话框 -->
+    <div v-if="showManagePermissionsDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-xl shadow-lg w-full max-w-lg mx-4">
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">管理权限 - {{ selectedRoleForPermissions?.name }}</h2>
+            <button @click="showManagePermissionsDialog = false" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+          </div>
+          <div v-if="selectedRoleForPermissions" class="space-y-4">
+            <div class="text-sm text-gray-600 mb-4">
+              <p>角色描述：{{ selectedRoleForPermissions.description || '暂无描述' }}</p>
+              <p class="mt-2">当前用户数：{{ selectedRoleForPermissions.user_count || 0 }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">分配权限</label>
+              <div v-if="availablePermissions.length > 0" class="max-h-80 overflow-y-auto border border-gray-300 rounded-lg">
+                <div v-for="(modulePerms, moduleName) in groupedPermissions" :key="moduleName" class="border-b border-gray-200 last:border-0">
+                  <div class="sticky top-0 bg-gray-50 px-3 py-2 border-b border-gray-200">
+                    <h3 class="font-medium text-sm text-gray-700">{{ moduleName }} 模块</h3>
+                  </div>
+                  <div class="p-3">
+                    <div class="space-y-2">
+                      <div v-for="permission in modulePerms" :key="permission.id" class="flex items-start p-2 hover:bg-gray-50 rounded">
+                        <input
+                          type="checkbox"
+                          :id="'role-perm-' + permission.id"
+                          :value="permission.id"
+                          v-model="selectedRoleForPermissions.permission_ids"
+                          class="mt-1 mr-2"
+                        >
+                        <label :for="'role-perm-' + permission.id" class="text-sm text-gray-700 flex-1 cursor-pointer">
+                          <div class="font-medium">{{ permission.name }}</div>
+                          <div class="text-xs text-gray-500">{{ permission.code }}</div>
+                          <div v-if="permission.description" class="text-xs text-gray-400 mt-1">{{ permission.description }}</div>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="text-center py-4 text-gray-500 border border-gray-300 rounded-lg">
+                <p>加载权限中...</p>
+              </div>
+              <p class="text-xs text-gray-500 mt-2">勾选为该角色分配的权限</p>
+            </div>
+          </div>
+          <div class="flex justify-end space-x-3 mt-8">
+            <button @click="showManagePermissionsDialog = false" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">取消</button>
+            <button @click="handleUpdateRolePermissions" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">保存更改</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 删除角色确认对话框 -->
+    <div v-if="showDeleteRoleDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-xl shadow-lg w-full max-w-md mx-4">
+        <div class="p-6">
+          <div class="flex items-center mb-4">
+            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
+              <span class="text-2xl text-red-600">🗑️</span>
+            </div>
+            <h2 class="text-xl font-bold text-gray-900">确认删除角色</h2>
+          </div>
+          <div v-if="roleToDelete" class="mb-6">
+            <p class="text-gray-600 mb-2">确定要删除角色 <strong>{{ roleToDelete.name }}</strong> 吗？</p>
+            <div v-if="roleToDelete.user_count > 0" class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
+              <p class="text-sm text-yellow-800">警告：该角色有 <strong>{{ roleToDelete.user_count }}</strong> 个用户关联。删除角色将移除这些用户的角色关联。</p>
+            </div>
+            <div v-if="roleToDelete.is_system" class="bg-red-50 border border-red-200 rounded-lg p-3">
+              <p class="text-sm text-red-800">系统内置角色不能删除。</p>
+            </div>
+          </div>
+          <div class="flex justify-end space-x-3">
+            <button @click="showDeleteRoleDialog = false" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">取消</button>
+            <button
+              @click="handleDeleteRole"
+              class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              :disabled="roleToDelete?.is_system"
+              :class="{'opacity-50 cursor-not-allowed': roleToDelete?.is_system}"
+            >
+              确定删除
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 操作栏 -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
       <div class="flex items-center space-x-4">
@@ -368,7 +518,7 @@
     <div class="bg-white rounded-xl shadow p-6">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-bold text-gray-900">角色与权限</h2>
-        <button class="px-3 py-1 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm">
+        <button @click="openAddRoleDialog" class="px-3 py-1 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm">
           + 添加角色
         </button>
       </div>
@@ -395,9 +545,15 @@
             </div>
             <div v-else class="text-xs text-gray-400">暂无权限</div>
           </div>
-          <button class="w-full px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm">
-            管理权限
-          </button>
+          <div class="flex space-x-2">
+            <button @click="openManagePermissionsDialog(role)" class="flex-1 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm">
+              管理权限
+            </button>
+            <button @click="openDeleteRoleDialog(role)" class="px-3 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 text-sm" :disabled="role.is_system">
+              <span v-if="role.is_system" title="系统内置角色不能删除">🔒</span>
+              <span v-else>删除</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -430,6 +586,9 @@ const userStats = ref({
 const showAddDialog = ref(false)
 const showEditDialog = ref(false)
 const showDeleteDialog = ref(false)
+const showAddRoleDialog = ref(false)
+const showManagePermissionsDialog = ref(false)
+const showDeleteRoleDialog = ref(false)
 
 // 表单数据
 const addUserForm = ref({
@@ -459,6 +618,19 @@ const editUserForm = ref({
 
 const userToDelete = ref(null)
 
+// 角色表单数据
+const addRoleForm = ref({
+  name: '',
+  description: '',
+  permission_ids: []
+})
+
+// 权限管理数据
+const permissions = ref([])
+const selectedRoleForPermissions = ref(null)
+const availablePermissions = ref([])
+const roleToDelete = ref(null)
+
 // 搜索和过滤条件
 const searchQuery = ref('')
 const selectedRole = ref('all')
@@ -485,6 +657,30 @@ const filteredUsers = computed(() => {
 
     return searchMatch && roleMatch && statusMatch
   })
+})
+
+// 计算属性：按模块分组的权限
+const groupedPermissions = computed(() => {
+  const groups = {}
+  availablePermissions.value.forEach(permission => {
+    if (!groups[permission.module]) {
+      groups[permission.module] = []
+    }
+    groups[permission.module].push(permission)
+  })
+  return groups
+})
+
+// 计算属性：按模块分组的权限（用于添加角色对话框）
+const groupedPermissionsForAdd = computed(() => {
+  const groups = {}
+  permissions.value.forEach(permission => {
+    if (!groups[permission.module]) {
+      groups[permission.module] = []
+    }
+    groups[permission.module].push(permission)
+  })
+  return groups
 })
 
 // 获取用户列表
@@ -514,10 +710,31 @@ const fetchUsers = async () => {
 // 获取角色列表
 const fetchRoles = async () => {
   try {
-    const response = await usersAPI.getSimpleRoles()
+    // 获取完整的角色列表，包含权限信息
+    const response = await usersAPI.getRoles()
     roles.value = response
   } catch (err) {
     console.error('获取角色列表失败:', err)
+  }
+}
+
+// 获取权限列表
+const fetchPermissions = async () => {
+  try {
+    const response = await usersAPI.getPermissions()
+    permissions.value = response
+  } catch (err) {
+    console.error('获取权限列表失败:', err)
+  }
+}
+
+// 获取完整权限列表（用于权限管理）
+const fetchAllPermissions = async () => {
+  try {
+    const response = await usersAPI.getPermissions()
+    availablePermissions.value = response
+  } catch (err) {
+    console.error('获取权限列表失败:', err)
   }
 }
 
@@ -581,6 +798,57 @@ const openEditDialog = (user) => {
 const openDeleteDialog = (user) => {
   userToDelete.value = user
   showDeleteDialog.value = true
+}
+
+// 打开添加角色对话框
+const openAddRoleDialog = async () => {
+  // 重置表单
+  addRoleForm.value = {
+    name: '',
+    description: '',
+    permission_ids: []
+  }
+  // 加载完整权限数据
+  await fetchAllPermissions()
+  // 将完整权限数据复制到permissions引用，供对话框使用
+  permissions.value = availablePermissions.value
+  showAddRoleDialog.value = true
+}
+
+// 打开管理权限对话框
+const openManagePermissionsDialog = async (role) => {
+  try {
+    selectedRoleForPermissions.value = null
+    showManagePermissionsDialog.value = true
+
+    // 获取角色完整信息
+    const roleDetail = await usersAPI.getRole(role.id)
+
+    // 确保permission_ids存在
+    selectedRoleForPermissions.value = {
+      ...roleDetail,
+      permission_ids: roleDetail.permission_ids || []
+    }
+
+    // 加载所有权限
+    await fetchAllPermissions()
+  } catch (err) {
+    console.error('获取角色详情失败:', err)
+    alert('获取角色详情失败：' + (err.response?.data?.detail || err.message))
+    showManagePermissionsDialog.value = false
+  }
+}
+
+// 打开删除角色对话框
+const openDeleteRoleDialog = (role) => {
+  // 如果是系统角色，提示不能删除
+  if (role.is_system) {
+    alert('系统内置角色不能删除')
+    return
+  }
+
+  roleToDelete.value = role
+  showDeleteRoleDialog.value = true
 }
 
 const handleAddUser = async () => {
@@ -682,6 +950,98 @@ const handleDeleteUser = async () => {
   }
 }
 
+// 添加角色
+const handleAddRole = async () => {
+  try {
+    // 简单验证
+    if (!addRoleForm.value.name) {
+      alert('请填写角色名称')
+      return
+    }
+
+    // 准备数据
+    const roleData = {
+      name: addRoleForm.value.name,
+      description: addRoleForm.value.description || null,
+      permission_ids: addRoleForm.value.permission_ids
+    }
+
+    await usersAPI.createRole(roleData)
+
+    // 刷新角色列表
+    fetchRoles()
+
+    // 关闭对话框
+    showAddRoleDialog.value = false
+
+    alert('角色添加成功')
+  } catch (err) {
+    console.error('添加角色失败:', err)
+    alert('添加角色失败：' + (err.response?.data?.detail || err.message))
+  }
+}
+
+// 更新角色权限
+const handleUpdateRolePermissions = async () => {
+  if (!selectedRoleForPermissions.value) return
+
+  try {
+    const roleId = selectedRoleForPermissions.value.id
+    const updateData = {
+      permission_ids: selectedRoleForPermissions.value.permission_ids
+    }
+
+    // 如果角色有名称等字段，也需要传递，但主要是更新权限
+    if (selectedRoleForPermissions.value.name) {
+      updateData.name = selectedRoleForPermissions.value.name
+    }
+    if (selectedRoleForPermissions.value.description !== undefined) {
+      updateData.description = selectedRoleForPermissions.value.description
+    }
+
+    await usersAPI.updateRole(roleId, updateData)
+
+    // 刷新角色列表
+    fetchRoles()
+
+    // 关闭对话框
+    showManagePermissionsDialog.value = false
+    selectedRoleForPermissions.value = null
+
+    alert('权限更新成功')
+  } catch (err) {
+    console.error('更新角色权限失败:', err)
+    alert('更新角色权限失败：' + (err.response?.data?.detail || err.message))
+  }
+}
+
+// 删除角色
+const handleDeleteRole = async () => {
+  if (!roleToDelete.value) return
+
+  // 再次检查是否为系统角色
+  if (roleToDelete.value.is_system) {
+    alert('系统内置角色不能删除')
+    return
+  }
+
+  try {
+    await usersAPI.deleteRole(roleToDelete.value.id)
+
+    // 刷新角色列表
+    fetchRoles()
+
+    // 关闭对话框
+    showDeleteRoleDialog.value = false
+    roleToDelete.value = null
+
+    alert('角色删除成功')
+  } catch (err) {
+    console.error('删除角色失败:', err)
+    alert('删除角色失败：' + (err.response?.data?.detail || err.message))
+  }
+}
+
 // 用户状态文本和样式
 const getUserStatus = (user) => {
   return user.is_active ? '活跃' : '停用'
@@ -719,5 +1079,6 @@ onMounted(() => {
   fetchUsers()
   fetchRoles()
   fetchUserStatistics()
+  fetchPermissions() // 预加载权限数据
 })
 </script>
