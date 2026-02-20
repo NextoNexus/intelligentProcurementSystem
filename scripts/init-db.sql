@@ -1,44 +1,96 @@
--- 初始化数据库脚本
--- 在PostgreSQL容器启动时自动执行
+-- Database initialization script
+-- This script should be executed automatically when PostgreSQL container starts
 
--- 创建扩展（如果需要）
+-- Set client encoding to UTF8
+SET client_encoding = 'UTF8';
+
+-- Create extension if needed
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- 设置搜索路径
+-- Set search path
 SET search_path TO public;
 
--- 注释：实际表结构将由Alembic迁移创建
--- 这里只创建一些初始数据
+-- Note: Actual table structure will be created by Alembic migrations
+-- Here we only create some initial data
 
--- 创建系统角色（如果表已存在）
+-- Create system roles (if tables exist)
 DO $$
 BEGIN
-    -- 插入系统角色
+    -- Insert system roles
     INSERT INTO role (id, name, description, is_system, created_at, updated_at, is_deleted)
     VALUES
-        (uuid_generate_v4(), 'admin', '系统管理员', true, NOW(), NOW(), false),
-        (uuid_generate_v4(), 'manager', '部门经理', true, NOW(), NOW(), false),
-        (uuid_generate_v4(), 'employee', '普通员工', true, NOW(), NOW(), false)
+        (uuid_generate_v4(), 'admin', 'System Administrator', true, NOW(), NOW(), false),
+        (uuid_generate_v4(), 'department_head', 'Department Head', true, NOW(), NOW(), false),
+        (uuid_generate_v4(), 'management', 'Management Level', true, NOW(), NOW(), false),
+        (uuid_generate_v4(), 'employee', 'Regular Employee', true, NOW(), NOW(), false)
     ON CONFLICT (name) DO NOTHING;
 
-    -- 插入系统权限（示例）
+    -- Insert system permissions (examples)
     INSERT INTO permission (id, code, name, description, module, created_at, updated_at, is_deleted)
     VALUES
-        (uuid_generate_v4(), 'user:create', '创建用户', '可以创建新用户', 'user', NOW(), NOW(), false),
-        (uuid_generate_v4(), 'user:read', '查看用户', '可以查看用户信息', 'user', NOW(), NOW(), false),
-        (uuid_generate_v4(), 'user:update', '更新用户', '可以更新用户信息', 'user', NOW(), NOW(), false),
-        (uuid_generate_v4(), 'user:delete', '删除用户', '可以删除用户', 'user', NOW(), NOW(), false),
-        (uuid_generate_v4(), 'procurement:create', '创建采购需求', '可以创建采购需求', 'procurement', NOW(), NOW(), false),
-        (uuid_generate_v4(), 'procurement:approve', '审批采购需求', '可以审批采购需求', 'procurement', NOW(), NOW(), false),
-        (uuid_generate_v4(), 'supplier:create', '创建供应商', '可以创建供应商', 'supplier', NOW(), NOW(), false),
-        (uuid_generate_v4(), 'supplier:read', '查看供应商', '可以查看供应商信息', 'supplier', NOW(), NOW(), false),
-        (uuid_generate_v4(), 'inventory:read', '查看库存', '可以查看库存信息', 'inventory', NOW(), NOW(), false),
-        (uuid_generate_v4(), 'inventory:update', '更新库存', '可以更新库存信息', 'inventory', NOW(), NOW(), false)
+        (uuid_generate_v4(), 'user:create', 'Create User', 'Can create new users', 'user', NOW(), NOW(), false),
+        (uuid_generate_v4(), 'user:read', 'View User', 'Can view user information', 'user', NOW(), NOW(), false),
+        (uuid_generate_v4(), 'user:update', 'Update User', 'Can update user information', 'user', NOW(), NOW(), false),
+        (uuid_generate_v4(), 'user:delete', 'Delete User', 'Can delete users', 'user', NOW(), NOW(), false),
+        (uuid_generate_v4(), 'procurement:create', 'Create Procurement Request', 'Can create procurement requests', 'procurement', NOW(), NOW(), false),
+        (uuid_generate_v4(), 'procurement:approve', 'Approve Procurement Request', 'Can approve procurement requests', 'procurement', NOW(), NOW(), false),
+        (uuid_generate_v4(), 'supplier:create', 'Create Supplier', 'Can create suppliers', 'supplier', NOW(), NOW(), false),
+        (uuid_generate_v4(), 'supplier:read', 'View Supplier', 'Can view supplier information', 'supplier', NOW(), NOW(), false),
+        (uuid_generate_v4(), 'inventory:read', 'View Inventory', 'Can view inventory information', 'inventory', NOW(), NOW(), false),
+        (uuid_generate_v4(), 'inventory:update', 'Update Inventory', 'Can update inventory information', 'inventory', NOW(), NOW(), false)
     ON CONFLICT (code) DO NOTHING;
 
-    -- 为角色分配权限（示例）
-    -- 注意：这里需要先查询角色的ID，但在SQL中简化处理
-    -- 实际应用中应该在应用层处理
-    RAISE NOTICE '数据库初始化完成。请在应用启动后通过管理界面配置角色权限。';
+    -- Assign all permissions to admin role
+    WITH admin_role AS (
+        SELECT id FROM role WHERE name = 'admin' LIMIT 1
+    ),
+    all_permissions AS (
+        SELECT id FROM permission
+    )
+    INSERT INTO role_permission (role_id, permission_id, created_at)
+    SELECT admin_role.id, all_permissions.id, NOW()
+    FROM admin_role, all_permissions
+    ON CONFLICT (role_id, permission_id) DO NOTHING;
+
+    -- Assign permissions to department_head role
+    WITH department_head_role AS (
+        SELECT id FROM role WHERE name = 'department_head' LIMIT 1
+    ),
+    department_head_permissions AS (
+        SELECT id FROM permission
+        WHERE code IN ('user:read', 'user:create', 'procurement:create', 'procurement:approve', 'supplier:read', 'inventory:read')
+    )
+    INSERT INTO role_permission (role_id, permission_id, created_at)
+    SELECT department_head_role.id, department_head_permissions.id, NOW()
+    FROM department_head_role, department_head_permissions
+    ON CONFLICT (role_id, permission_id) DO NOTHING;
+
+    -- Assign permissions to management role
+    WITH management_role AS (
+        SELECT id FROM role WHERE name = 'management' LIMIT 1
+    ),
+    management_permissions AS (
+        SELECT id FROM permission
+        WHERE code IN ('user:read', 'procurement:approve', 'supplier:read', 'inventory:read')
+    )
+    INSERT INTO role_permission (role_id, permission_id, created_at)
+    SELECT management_role.id, management_permissions.id, NOW()
+    FROM management_role, management_permissions
+    ON CONFLICT (role_id, permission_id) DO NOTHING;
+
+    -- Assign permissions to employee role
+    WITH employee_role AS (
+        SELECT id FROM role WHERE name = 'employee' LIMIT 1
+    ),
+    employee_permissions AS (
+        SELECT id FROM permission
+        WHERE code IN ('user:read', 'procurement:create', 'supplier:read', 'inventory:read')
+    )
+    INSERT INTO role_permission (role_id, permission_id, created_at)
+    SELECT employee_role.id, employee_permissions.id, NOW()
+    FROM employee_role, employee_permissions
+    ON CONFLICT (role_id, permission_id) DO NOTHING;
+
+    RAISE NOTICE 'Database initialization completed. Default permissions assigned to system roles.';
 END
 $$;

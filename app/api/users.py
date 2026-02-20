@@ -533,7 +533,44 @@ async def get_roles(
     result = await db.execute(query)
     roles = result.scalars().all()
 
-    return roles
+    # 如果没有角色，直接返回
+    if not roles:
+        return []
+
+    # 提取角色ID列表
+    role_ids = [role.id for role in roles]
+
+    # 查询每个角色的用户数量
+    user_count_query = (
+        select(user_role.c.role_id, func.count(user_role.c.user_id).label('user_count'))
+        .where(user_role.c.role_id.in_(role_ids))
+        .group_by(user_role.c.role_id)
+    )
+    user_count_result = await db.execute(user_count_query)
+    user_counts = {role_id: count for role_id, count in user_count_result.all()}
+
+    # 为每个角色添加用户数量和权限信息
+    response_roles = []
+    for role in roles:
+        # 获取权限代码列表和权限ID列表
+        permission_codes = [perm.code for perm in role.permissions]
+        permission_ids = [perm.id for perm in role.permissions]
+
+        # 构建响应字典
+        role_dict = {
+            "id": role.id,
+            "name": role.name,
+            "description": role.description,
+            "is_system": role.is_system,
+            "user_count": user_counts.get(role.id, 0),
+            "permissions": permission_codes,
+            "permission_ids": permission_ids,
+            "created_at": role.created_at,
+            "updated_at": role.updated_at
+        }
+        response_roles.append(role_dict)
+
+    return response_roles
 
 
 @router.get("/roles/{role_id}", response_model=RoleResponse, dependencies=[Depends(require_role("admin"))])
@@ -555,7 +592,32 @@ async def get_role(
             detail="角色不存在"
         )
 
-    return role
+    # 查询该角色的用户数量
+    user_count_query = (
+        select(func.count(user_role.c.user_id))
+        .where(user_role.c.role_id == role_id)
+    )
+    user_count_result = await db.execute(user_count_query)
+    user_count = user_count_result.scalar() or 0
+
+    # 获取权限代码列表和权限ID列表
+    permission_codes = [perm.code for perm in role.permissions]
+    permission_ids = [perm.id for perm in role.permissions]
+
+    # 构建响应字典
+    role_dict = {
+        "id": role.id,
+        "name": role.name,
+        "description": role.description,
+        "is_system": role.is_system,
+        "user_count": user_count,
+        "permissions": permission_codes,
+        "permission_ids": permission_ids,
+        "created_at": role.created_at,
+        "updated_at": role.updated_at
+    }
+
+    return role_dict
 
 
 @router.post("/roles/", response_model=RoleResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_role("admin"))])
@@ -606,7 +668,27 @@ async def create_role(
     await db.commit()
     await db.refresh(role)
 
-    return role
+    # 新创建的角色没有用户
+    role.user_count = 0
+
+    # 获取权限代码列表和权限ID列表
+    permission_codes = [perm.code for perm in role.permissions]
+    permission_ids = [perm.id for perm in role.permissions]
+
+    # 构建响应字典
+    role_dict = {
+        "id": role.id,
+        "name": role.name,
+        "description": role.description,
+        "is_system": role.is_system,
+        "user_count": 0,
+        "permissions": permission_codes,
+        "permission_ids": permission_ids,
+        "created_at": role.created_at,
+        "updated_at": role.updated_at
+    }
+
+    return role_dict
 
 
 @router.put("/roles/{role_id}", response_model=RoleResponse, dependencies=[Depends(require_role("admin"))])
@@ -679,7 +761,32 @@ async def update_role(
     await db.commit()
     await db.refresh(role)
 
-    return role
+    # 查询该角色的用户数量
+    user_count_query = (
+        select(func.count(user_role.c.user_id))
+        .where(user_role.c.role_id == role_id)
+    )
+    user_count_result = await db.execute(user_count_query)
+    user_count = user_count_result.scalar() or 0
+
+    # 获取权限代码列表和权限ID列表
+    permission_codes = [perm.code for perm in role.permissions]
+    permission_ids = [perm.id for perm in role.permissions]
+
+    # 构建响应字典
+    role_dict = {
+        "id": role.id,
+        "name": role.name,
+        "description": role.description,
+        "is_system": role.is_system,
+        "user_count": user_count,
+        "permissions": permission_codes,
+        "permission_ids": permission_ids,
+        "created_at": role.created_at,
+        "updated_at": role.updated_at
+    }
+
+    return role_dict
 
 
 @router.delete("/roles/{role_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(require_role("admin"))])
