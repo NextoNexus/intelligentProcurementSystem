@@ -260,7 +260,7 @@
           <div class="space-y-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">角色名称 *</label>
-              <input v-model="addRoleForm.name" type="text" placeholder="例如：admin、manager、employee" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+              <input v-model="addRoleForm.name" type="text" placeholder="例如：admin、department_head、management、employee" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
               <p class="text-xs text-gray-500 mt-1">角色名称应简洁明了，用于标识角色</p>
             </div>
             <div>
@@ -394,6 +394,77 @@
             >
               确定删除
             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 查看角色详情对话框 -->
+    <div v-if="showViewRoleDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl mx-4">
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">角色详情</h2>
+            <button @click="showViewRoleDialog = false" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+          </div>
+          <div v-if="selectedRoleForView" class="space-y-6">
+            <!-- 角色基本信息 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">基本信息</h3>
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">角色名称</label>
+                    <p class="text-lg font-semibold text-gray-900">{{ selectedRoleForView.name }}</p>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">角色描述</label>
+                    <p class="text-gray-700">{{ selectedRoleForView.description || '暂无描述' }}</p>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">系统内置角色</label>
+                    <p class="text-gray-700">{{ selectedRoleForView.is_system ? '是' : '否' }}</p>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">统计信息</h3>
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">关联用户数</label>
+                    <p class="text-lg font-semibold text-gray-900">{{ selectedRoleForView.user_count || 0 }} 个用户</p>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">权限数量</label>
+                    <p class="text-lg font-semibold text-gray-900">{{ selectedRoleForView.permission_details?.length || 0 }} 个权限</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 权限列表 -->
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900 mb-4">权限列表</h3>
+              <div v-if="selectedRoleForView.permission_details && selectedRoleForView.permission_details.length > 0">
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <p class="text-sm text-gray-600 mb-3">该角色拥有以下权限：</p>
+                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div v-for="permission in selectedRoleForView.permission_details" :key="permission.id" class="bg-white border border-gray-200 rounded-lg p-3">
+                      <div class="text-sm font-medium text-gray-900">{{ permission.name }}</div>
+                      <div class="text-xs text-gray-500 mt-1">{{ permission.code }}</div>
+                      <div v-if="permission.description" class="text-xs text-gray-400 mt-1">{{ permission.description }}</div>
+                      <div class="text-xs text-gray-400 mt-1">模块：{{ permission.module }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="bg-gray-50 rounded-lg p-8 text-center">
+                <p class="text-gray-500">该角色暂无任何权限</p>
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-end space-x-3 mt-8">
+            <button @click="showViewRoleDialog = false" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">关闭</button>
           </div>
         </div>
       </div>
@@ -534,16 +605,10 @@
           </div>
           <h3 class="font-bold text-gray-900 mb-2">{{ role.name }}</h3>
           <p class="text-sm text-gray-600 mb-4">{{ role.description || '暂无描述' }}</p>
-          <div class="space-y-2 mb-4">
-            <div v-if="role.permissions && role.permissions.length > 0" class="flex flex-wrap gap-1">
-              <span v-for="perm in role.permissions.slice(0, 3)" :key="perm" class="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-800 rounded">
-                {{ perm }}
-              </span>
-              <span v-if="role.permissions.length > 3" class="px-1.5 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
-                +{{ role.permissions.length - 3 }}
-              </span>
-            </div>
-            <div v-else class="text-xs text-gray-400">暂无权限</div>
+          <div class="mb-4">
+            <button @click="openViewRoleDialog(role)" class="w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm transition-colors">
+              查看详情
+            </button>
           </div>
           <div class="flex space-x-2">
             <button @click="openManagePermissionsDialog(role)" class="flex-1 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm">
@@ -589,6 +654,7 @@ const showDeleteDialog = ref(false)
 const showAddRoleDialog = ref(false)
 const showManagePermissionsDialog = ref(false)
 const showDeleteRoleDialog = ref(false)
+const showViewRoleDialog = ref(false)
 
 // 表单数据
 const addUserForm = ref({
@@ -630,6 +696,7 @@ const permissions = ref([])
 const selectedRoleForPermissions = ref(null)
 const availablePermissions = ref([])
 const roleToDelete = ref(null)
+const selectedRoleForView = ref(null)
 
 // 搜索和过滤条件
 const searchQuery = ref('')
@@ -836,6 +903,51 @@ const openManagePermissionsDialog = async (role) => {
     console.error('获取角色详情失败:', err)
     alert('获取角色详情失败：' + (err.response?.data?.detail || err.message))
     showManagePermissionsDialog.value = false
+  }
+}
+
+// 打开查看角色详情对话框
+const openViewRoleDialog = async (role) => {
+  try {
+    selectedRoleForView.value = null
+    showViewRoleDialog.value = true
+
+    // 获取角色完整信息
+    const roleDetail = await usersAPI.getRole(role.id)
+
+    // 加载所有权限
+    await fetchAllPermissions()
+
+    // 将权限ID映射为权限详情
+    const permissionDetails = []
+    if (roleDetail.permission_ids && roleDetail.permission_ids.length > 0) {
+      roleDetail.permission_ids.forEach(permissionId => {
+        const perm = availablePermissions.value.find(p => p.id === permissionId)
+        if (perm) {
+          permissionDetails.push(perm)
+        } else {
+          // 如果找不到权限详情，至少显示ID
+          permissionDetails.push({
+            id: permissionId,
+            name: `权限ID: ${permissionId}`,
+            code: '未知',
+            module: '未知',
+            description: '权限详情未找到'
+          })
+        }
+      })
+    }
+
+    // 确保permission_ids存在，并添加权限详情
+    selectedRoleForView.value = {
+      ...roleDetail,
+      permission_ids: roleDetail.permission_ids || [],
+      permission_details: permissionDetails
+    }
+  } catch (err) {
+    console.error('获取角色详情失败:', err)
+    alert('获取角色详情失败：' + (err.response?.data?.detail || err.message))
+    showViewRoleDialog.value = false
   }
 }
 
